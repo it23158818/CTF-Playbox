@@ -10,7 +10,7 @@ import socketserver
 import json
 import urllib.parse
 import os
-from flask import Flask, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response
 
 PORT = int(os.environ.get("PORT", 8081))
 STAGE1_FLAG = os.environ.get("STAGE1_FLAG", "CVT{0s1nt_st4g1ng_l34k_8291}")
@@ -18,7 +18,8 @@ STAGE2_URL = os.environ.get("STAGE2_URL", "http://localhost:8082")
 CORRECT_HOSTNAME = "vault-staging.cybervaulttech.com"
 DECOY_HOSTNAME = "vault-legacy-01"
 
-app = Flask(__name__)
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+app = Flask(__name__, template_folder=template_dir)
 
 CAREERS_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -635,16 +636,47 @@ Disallow: /staging-enclave/
 # Flask Application Routes (WSGI / Vercel Serverless Ready)
 # ============================================================================
 
-@app.route("/")
-@app.route("/careers")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/careers", methods=["GET", "POST"])
+@app.route("/api/index", methods=["GET", "POST"])
+@app.route("/api/index.py", methods=["GET", "POST"])
 def careers():
-    resp = Response(CAREERS_HTML, mimetype="text/html; charset=utf-8")
+    # Dispatch when Vercel rewrites requests to /api/index?path=...
+    target_path = request.args.get("path", "").strip()
+    if target_path:
+        clean_path = target_path.rstrip("/") if target_path != "/" else "/"
+        if not clean_path.startswith("/"):
+            clean_path = "/" + clean_path
+
+        if clean_path in ("/social",):
+            return social()
+        elif clean_path in ("/robots.txt",):
+            return robots()
+        elif clean_path in ("/api/status",):
+            return api_status()
+        elif clean_path in ("/api/verify",):
+            return api_verify()
+        elif clean_path in ("/", "/careers"):
+            pass
+        else:
+            return Response("404 Not Found", status=404, mimetype="text/plain")
+
+    try:
+        content = render_template("careers.html")
+    except Exception:
+        content = CAREERS_HTML
+    resp = Response(content, mimetype="text/html; charset=utf-8")
     resp.headers["X-Challenge-Stage"] = "1-OSINT-Recon"
     return resp
 
+
 @app.route("/social")
 def social():
-    resp = Response(SOCIAL_HTML, mimetype="text/html; charset=utf-8")
+    try:
+        content = render_template("social.html")
+    except Exception:
+        content = SOCIAL_HTML
+    resp = Response(content, mimetype="text/html; charset=utf-8")
     resp.headers["X-Challenge-Stage"] = "1-OSINT-Recon"
     return resp
 
