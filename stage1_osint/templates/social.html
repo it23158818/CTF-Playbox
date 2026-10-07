@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Updates | CyberVault Technologies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.9);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --accent-cyan: #38bdf8;
+            --accent-blue: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+        }
+        header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #fff;
+            text-decoration: none;
+        }
+        .brand-badge {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-left: 1.75rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        nav a:hover, nav a.active { color: var(--accent-cyan); }
+        .feed-container {
+            max-width: 720px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .feed-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .feed-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        .post-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+        .author-details h4 { font-size: 1rem; color: #fff; }
+        .author-details span { font-size: 0.8rem; color: var(--text-muted); }
+        .post-body {
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        .highlight {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-cyan);
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .post-tags {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+        }
+        .verify-box {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        .verify-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-cyan);
+        }
+        .verify-box p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        .form-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+        button {
+            padding: 0.7rem 1.4rem;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .result {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .result.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+        .result.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="brand">
+                <span class="brand-badge">CVT</span>
+                CyberVault Technologies
+            </a>
+            <nav>
+                <a href="/">Careers</a>
+                <a href="/social" class="active">Public Feed</a>
+                <a href="/robots.txt" target="_blank">robots.txt</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="feed-container">
+        <div class="feed-header">
+            <h1>Engineering Social Stream</h1>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Real-time development updates from our engineering crew</p>
+        </div>
+
+        <div class="post-card">
+            <div class="post-author">
+                <div class="avatar">AR</div>
+                <div class="author-details">
+                    <h4>Alex Rivera</h4>
+                    <span>@arivera_dev &bull; Principal DevOps Engineer &bull; 2h ago</span>
+                </div>
+            </div>
+            <div class="post-body">
+                Migration milestone accomplished! Decommissioned that pesky legacy cluster <span class="highlight">vault-legacy-01</span> for good this morning. All staging validation runs are now pointed squarely at <span class="highlight">vault-staging.cybervaulttech.com</span>! Huge props to the infrastructure team for zero downtime during cutover! 🚀🔐
+            </div>
+            <div class="post-tags">
+                <span>#DevOps</span>
+                <span>#CloudInfra</span>
+                <span>#ZeroTrust</span>
+                <span>#CyberVault</span>
+            </div>
+        </div>
+
+        <div class="post-card">
+            <div class="post-author">
+                <div class="avatar">SM</div>
+                <div class="author-details">
+                    <h4>Sarah Miller</h4>
+                    <span>@smiller_sec &bull; Security Operations &bull; 1d ago</span>
+                </div>
+            </div>
+            <div class="post-body">
+                Reminder for all staff: Passive reconnaissance assessments have kicked off. Ensure all metadata on public assets is sanitized before uploading to public repositories or CDNs. Stay vigilant!
+            </div>
+            <div class="post-tags">
+                <span>#SecOps</span>
+                <span>#InformationSecurity</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function verifyHostname() {
+            const val = document.getElementById('hostInput').value.trim();
+            const res = document.getElementById('resultBox');
+            if (!val) return;
+
+            fetch('/api/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ hostname: val })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    res.className = 'result success';
+                    res.innerHTML = `<strong>ACCESS GRANTED:</strong> Host confirmed active.<br>` +
+                                    `<strong>SECURITY FLAG:</strong> <code>${data.flag}</code><br>` +
+                                    `<span style="display:inline-block; margin-top:0.5rem;"><a href="${data.next_target}" target="_blank" style="color:#10b981; font-weight:bold;">&rarr; Access Internal Host (${data.next_target})</a></span>`;
+                } else {
+                    res.className = 'result error';
+                    res.innerHTML = `<strong>FAILED:</strong> ${data.message}`;
+                }
+            })
+            .catch(e => {
+                res.className = 'result error';
+                res.innerHTML = 'Error communicating with validation server.';
+            });
+        }
+    </script>
+</body>
+</html>
