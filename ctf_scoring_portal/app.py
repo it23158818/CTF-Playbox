@@ -104,6 +104,21 @@ def serve_static(filename):
 @app.route("/api/index.py")
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
+    # When Vercel rewrites /login, /register, etc. to /api/index?path=...
+    target_path = request.args.get("path", "").strip()
+    if target_path in ("/login", "login"):
+        return login()
+    elif target_path in ("/register", "register"):
+        return register()
+    elif target_path in ("/leaderboard", "leaderboard"):
+        return leaderboard()
+    elif target_path in ("/challenges", "challenges"):
+        return challenges()
+    elif target_path in ("/admin_login", "admin_login"):
+        return admin_login()
+    elif target_path in ("/admin_panel", "admin_panel"):
+        return admin_panel()
+
     return render_template("home.html")
 
 
