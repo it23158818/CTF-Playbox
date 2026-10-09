@@ -1,10 +1,3 @@
-"""
-================================================================================
-CyberVault : Operation ShadowTrace - Central CTF Scoring & Submission Portal
-Author: Member 3 - IT24103027 (Hettige D.R.B)
-================================================================================
-"""
-
 import os
 import sys
 import functools
