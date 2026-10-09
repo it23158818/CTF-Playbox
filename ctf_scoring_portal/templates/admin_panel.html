@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — CyberVault CTF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+    <style>
+        .admin-layout { display: flex; min-height: 100vh; }
+        .admin-sidebar {
+            width: 240px;
+            background: rgba(10,15,26,0.95);
+            border-right: 1px solid #1e293b;
+            padding: 20px 0;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 16px;
+        }
+        .sidebar-brand-title { font-weight: 800; color: #8b5cf6; font-size: 1rem; }
+        .sidebar-brand-sub { font-size: 0.72rem; color: #64748b; font-family: 'Fira Code', monospace; }
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav li a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; color: #94a3b8; text-decoration: none;
+            font-size: 0.88rem; font-weight: 500; transition: all 0.15s;
+        }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active {
+            color: #8b5cf6; background: rgba(139,92,246,0.08);
+        }
+        .admin-main { flex: 1; padding: 28px; overflow-x: hidden; }
+        .admin-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+        }
+        .admin-title { font-size: 1.5rem; font-weight: 800; }
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px; color: #f8fafc;
+        }
+        .admin-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .admin-card {
+            background: rgba(15,23,42,0.75);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .val-big { font-size: 2rem; font-weight: 800; font-family: 'Fira Code', monospace; line-height: 1.2; }
+        .val-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stage-admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .stage-admin-table th {
+            background: rgba(15,23,42,0.9); padding: 10px 12px;
+            text-align: left; font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #64748b; border-bottom: 1px solid #1e293b;
+        }
+        .stage-admin-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+        .stage-admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .admin-input {
+            width: 100%; background: #0b1120; border: 1px solid #1e293b;
+            border-radius: 6px; padding: 7px 10px; color: #f8fafc; font-size: 0.85rem;
+            font-family: 'Fira Code', monospace;
+        }
+        .admin-input:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.25); }
+        .admin-textarea {
+            width: 100%; background: #0b1120; border: 1px solid #1e293b;
+            border-radius: 6px; padding: 7px 10px; color: #f8fafc; font-size: 0.82rem;
+            font-family: 'Fira Code', monospace; min-height: 72px; resize: vertical;
+        }
+        .admin-textarea:focus { outline: none; border-color: #8b5cf6; }
+        .pts-input { width: 80px; text-align: center; }
+        .pen-input { width: 60px; text-align: center; }
+        .points-sum-display {
+            text-align: right; font-size: 1rem; font-family: 'Fira Code', monospace;
+            font-weight: 700; margin: 12px 0; padding: 10px 16px;
+            background: rgba(15,23,42,0.6); border: 1px solid #1e293b; border-radius: 8px;
+        }
+        .crypto-box {
+            background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 8px; padding: 14px; font-family: 'Fira Code', monospace; font-size: 0.82rem;
+        }
+        .crypto-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .flag-encrypted-cell {
+            font-family: 'Fira Code', monospace; font-size: 0.72rem;
+            color: #64748b; max-width: 200px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .section-divider { border: none; border-top: 1px solid #1e293b; margin: 32px 0; }
+        .user-list-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .user-list-table th {
+            background: rgba(15,23,42,0.9); padding: 10px 14px;
+            text-align: left; font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #64748b; border-bottom: 1px solid #1e293b;
+        }
+        .user-list-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .rule-box {
+            background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 0.85rem;
+            color: #94a3b8; line-height: 1.8;
+        }
+        .alert-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.88rem; }
+        .alert-error { background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: #f43f5e; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.88rem; }
+        .alert-info { background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.25); color: #00f2fe; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.88rem; }
+    </style>
+</head>
+<body style="background: #080c14;">
+
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <div class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div style="font-size: 1.5rem; margin-bottom: 6px;">⚙️</div>
+            <div class="sidebar-brand-title">Admin Command</div>
+            <div class="sidebar-brand-sub">CyberVault CTF</div>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#overview" class="active">📊 Overview</a></li>
+            <li><a href="#stages-config">🚩 Stage Flags</a></li>
+            <li><a href="#users">👥 Participants</a></li>
+            <li><a href="#submissions">📋 Submissions</a></li>
+            <li><a href="#crypto">🔐 Crypto Status</a></li>
+            <li><a href="#rules-info">📜 Scoring Rules</a></li>
+        </ul>
+        <div style="padding: 20px; margin-top: 20px; border-top: 1px solid #1e293b;">
+            <a href="{{ url_for('challenges') }}" style="color: #64748b; font-size: 0.82rem; text-decoration: none; display: block; margin-bottom: 8px;">← CTF Portal</a>
+            <a href="{{ url_for('admin_logout') }}" style="color: #f43f5e; font-size: 0.82rem; text-decoration: none; display: block;">🔓 Admin Logout</a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-main">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% for category, message in messages %}
+        <div class="alert-{{ 'error' if category == 'error' else ('success' if category == 'success' else 'info') }}">
+            {{ '✅' if category == 'success' else ('❌' if category == 'error' else 'ℹ️') }} {{ message }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+
+        <!-- HEADER -->
+        <div class="admin-header" id="overview">
+            <div>
+                <h1 class="admin-title" style="background: linear-gradient(90deg, #8b5cf6, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Admin Command Centre
+                </h1>
+                <p style="color: #64748b; font-size: 0.85rem; font-family: 'Fira Code', monospace;">
+                    Secret Path: /{{ secret_token }}/admin &nbsp;|&nbsp; Logged in as: <strong style="color: #8b5cf6;">{{ session.get('is_admin') and 'admin' }}</strong>
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="badge badge-purple">{{ db_backend[:25] }}</span>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-danger" style="font-size: 0.82rem; padding: 7px 14px;">🔓 Logout</a>
+            </div>
+        </div>
+
+        <!-- OVERVIEW STATS -->
+        <div class="admin-grid-2">
+            <div class="admin-card">
+                <div class="val-big" style="color: #00f2fe;">{{ stages|length }}</div>
+                <div class="val-label">Active CTF Stages</div>
+            </div>
+            <div class="admin-card">
+                <div class="val-big" style="color: #10b981;">{{ total_points }}</div>
+                <div class="val-label">Total Configured Points</div>
+                {% if total_points != 100 %}
+                <div style="color: #f43f5e; font-size: 0.78rem; margin-top: 6px;">⚠️ Must equal exactly 100!</div>
+                {% else %}
+                <div style="color: #10b981; font-size: 0.78rem; margin-top: 6px;">✔ Correct (100 pts)</div>
+                {% endif %}
+            </div>
+            <div class="admin-card">
+                <div class="val-big" style="color: #8b5cf6;">{{ users|length }}</div>
+                <div class="val-label">Registered Participants</div>
+            </div>
+            <div class="admin-card">
+                <div class="val-big" style="color: #f59e0b;">{{ submissions|length }}</div>
+                <div class="val-label">Total Submissions</div>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             STAGE FLAGS CONFIGURATION
+             ================================================================ -->
+        <hr class="section-divider" id="stages-config">
+        <div class="section-title">🚩 Stage Flags & Configuration</div>
+
+        <div class="rule-box">
+            📜 <strong style="color: #f59e0b;">CTF Scoring Rules (enforced on save):</strong>
+            <ul style="list-style: disc; margin-left: 20px; margin-top: 6px;">
+                <li>Total sum of all 6 stage points must equal exactly <strong style="color: #00f2fe;">100 pts</strong></li>
+                <li>Points must <strong style="color: #10b981;">strictly increase</strong> per stage level (S1 &lt; S2 &lt; S3 &lt; S4 &lt; S5 &lt; S6)</li>
+                <li>Minimum points per stage: <strong style="color: #00f2fe;">5 pts</strong></li>
+                <li>Hint 1 penalty: default <strong style="color: #f59e0b;">10%</strong> of stage marks</li>
+                <li>Hint 2 penalty: default <strong style="color: #f43f5e;">50%</strong> of stage marks (configurable below)</li>
+                <li>All flags are encrypted with <strong style="color: #10b981;">AES-256 Fernet</strong> before storage in MongoDB</li>
+            </ul>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_update_stages') }}" id="stagesForm">
+            <!-- Live points sum display -->
+            <div class="points-sum-display" id="pointsSumDisplay">
+                Total Points: <span id="pointsSum" style="color: #00f2fe;">{{ total_points }}</span> / 100
+                <span id="pointsOK" style="color: #10b981; margin-left: 10px;">{{ '✔ Valid' if total_points == 100 else '' }}</span>
+                <span id="pointsWarn" style="color: #f43f5e; margin-left: 10px;">{{ '⚠️ Must equal 100!' if total_points != 100 else '' }}</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+            <table class="stage-admin-table">
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Stage Name</th>
+                        <th>Domain</th>
+                        <th>Target URL</th>
+                        <th>Base Points</th>
+                        <th>New Plaintext Flag <small>(leave blank = keep existing)</small></th>
+                        <th>Current Encrypted Flag</th>
+                        <th>Hint 1 Text</th>
+                        <th>H1 Penalty%</th>
+                        <th>Hint 2 Text</th>
+                        <th>H2 Penalty%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in stages %}
+                    <tr>
+                        <td>
+                            <span class="badge badge-purple">S{{ s.stage_id }}</span>
+                        </td>
+                        <td><input type="text" class="admin-input" name="name_{{ s.stage_id }}" value="{{ s.stage_name }}" style="min-width: 200px;"></td>
+                        <td><input type="text" class="admin-input" name="domain_{{ s.stage_id }}" value="{{ s.domain }}" style="min-width: 160px;"></td>
+                        <td><input type="text" class="admin-input" name="url_{{ s.stage_id }}" value="{{ s.target_url }}" style="min-width: 160px;"></td>
+                        <td>
+                            <input type="number" class="admin-input pts-input pts-field"
+                                name="points_{{ s.stage_id }}" value="{{ s.base_points }}"
+                                min="5" max="90" required oninput="recalcPoints()"
+                                data-stage="{{ s.stage_id }}">
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px;">min 5</div>
+                        </td>
+                        <td>
+                            <input type="text" class="admin-input" name="flag_{{ s.stage_id }}"
+                                placeholder="CVT{new_flag_here}"
+                                style="min-width: 220px; font-family: 'Fira Code', monospace;"
+                                autocomplete="off">
+                            {% if s.decrypted_flag %}
+                            <div style="font-size: 0.7rem; color: #10b981; margin-top: 4px; font-family: 'Fira Code', monospace;">
+                                Current: {{ s.decrypted_flag }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flag-encrypted-cell" title="{{ s.encrypted_flag }}">
+                                🔒 {{ s.encrypted_flag[:30] if s.encrypted_flag else 'Not set' }}…
+                            </div>
+                        </td>
+                        <td><textarea class="admin-textarea" name="hint1_{{ s.stage_id }}" style="min-width: 200px;">{{ s.hint1_text }}</textarea></td>
+                        <td><input type="number" class="admin-input pen-input" name="h1_pen_{{ s.stage_id }}" value="{{ s.hint1_penalty_pct }}" min="0" max="100"></td>
+                        <td><textarea class="admin-textarea" name="hint2_{{ s.stage_id }}" style="min-width: 200px;">{{ s.hint2_text }}</textarea></td>
+                        <td><input type="number" class="admin-input pen-input" name="h2_pen_{{ s.stage_id }}" value="{{ s.hint2_penalty_pct }}" min="0" max="100"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px; align-items: center;">
+                <button type="submit" class="btn btn-primary" style="font-size: 0.95rem; padding: 12px 28px;">
+                    💾 Save & Encrypt All Flags
+                </button>
+                <span style="font-size: 0.8rem; color: #64748b;">
+                    All plaintext flags will be AES-256 encrypted before saving to MongoDB.
+                </span>
+            </div>
+        </form>
+
+        <!-- ================================================================
+             PARTICIPANTS TABLE
+             ================================================================ -->
+        <hr class="section-divider" id="users">
+        <div class="section-title">👥 Registered Participants</div>
+
+        <div style="background: var(--bg-card, rgba(15,23,42,0.75)); border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 28px;">
+            <div style="overflow-x: auto;">
+            <table class="user-list-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Team</th>
+                        <th>Role</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for idx, u in enumerate(users) %}
+                    <tr>
+                        <td style="color: #64748b;">{{ idx + 1 }}</td>
+                        <td style="font-family: 'Fira Code', monospace; font-weight: 600;">{{ u.username }}</td>
+                        <td>{{ u.full_name or '—' }}</td>
+                        <td>{{ u.team_name or '—' }}</td>
+                        <td>
+                            <span class="badge {{ 'badge-purple' if u.role == 'admin' else 'badge-cyan' }}">{{ u.role }}</span>
+                        </td>
+                        <td style="font-size: 0.8rem; color: #64748b; font-family: 'Fira Code', monospace;">
+                            {{ u.created_at[:16] if u.created_at else '—' }}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_reset_user', username=u.username) }}"
+                                onsubmit="return confirm('Reset all progress and submissions for {{ u.username }}? This cannot be undone.');">
+                                <button type="submit" class="btn btn-danger" style="font-size: 0.78rem; padding: 5px 12px;">
+                                    🗑 Reset Score
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">No participants registered yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             SUBMISSIONS LOG
+             ================================================================ -->
+        <hr class="section-divider" id="submissions">
+        <div class="section-title">📋 Recent Submissions</div>
+
+        <div style="background: var(--bg-card, rgba(15,23,42,0.75)); border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 28px;">
+            <div style="overflow-x: auto;">
+            <table class="user-list-table">
+                <thead>
+                    <tr>
+                        <th>Operator</th>
+                        <th>Stage</th>
+                        <th>Submitted Flag</th>
+                        <th>Result</th>
+                        <th>Points</th>
+                        <th>Penalty</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.85rem;">{{ sub.username }}</td>
+                        <td><span class="badge badge-purple">S{{ sub.stage_id }}</span></td>
+                        <td style="font-family: 'Fira Code', monospace; font-size: 0.78rem; color: #64748b; max-width: 180px; overflow: hidden; text-overflow: ellipsis;">
+                            {{ sub.submitted_flag }}
+                        </td>
+                        <td>
+                            {% if sub.is_correct %}
+                            <span class="badge badge-emerald">✔ Correct</span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.25);">✗ Wrong</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-family: 'Fira Code', monospace; color: #10b981;">
+                            {{ sub.points_awarded if sub.is_correct else '—' }}
+                        </td>
+                        <td style="font-family: 'Fira Code', monospace; color: #f59e0b; font-size: 0.82rem;">
+                            {{ '-' + sub.penalty_deducted|string if sub.penalty_deducted and sub.is_correct else '—' }}
+                        </td>
+                        <td style="font-size: 0.78rem; color: #64748b; font-family: 'Fira Code', monospace;">{{ sub.timestamp[:16] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">No submissions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             CRYPTOGRAPHIC STATUS
+             ================================================================ -->
+        <hr class="section-divider" id="crypto">
+        <div class="section-title">🔐 Encryption Engine Diagnostics</div>
+
+        <div class="crypto-box" style="max-width: 600px; margin-bottom: 28px;">
+            <div class="crypto-row">
+                <span style="color: #94a3b8;">Cipher:</span>
+                <strong style="color: #10b981;">{{ crypto_status.cipher }}</strong>
+            </div>
+            <div class="crypto-row">
+                <span style="color: #94a3b8;">Hash Algorithm:</span>
+                <strong style="color: #10b981;">{{ crypto_status.hash_algorithm }}</strong>
+            </div>
+            <div class="crypto-row">
+                <span style="color: #94a3b8;">Key Fingerprint:</span>
+                <span style="color: #00f2fe;">{{ crypto_status.key_fingerprint }}</span>
+            </div>
+            <div class="crypto-row">
+                <span style="color: #94a3b8;">Self-Test:</span>
+                {% if crypto_status.healthy %}
+                <span style="color: #10b981; font-weight: 700;">✔ PASS — Encrypt/Decrypt verified</span>
+                {% else %}
+                <span style="color: #f43f5e; font-weight: 700;">✗ FAIL — Check FLAG_ENCRYPTION_KEY in .env</span>
+                {% endif %}
+            </div>
+            <div class="crypto-row">
+                <span style="color: #94a3b8;">Database Backend:</span>
+                <span style="color: #8b5cf6;">{{ db_backend }}</span>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             SCORING RULES INFO (READ ONLY)
+             ================================================================ -->
+        <hr class="section-divider" id="rules-info">
+        <div class="section-title">📜 CTF Scoring Rules Reference</div>
+
+        <div class="rule-box" style="max-width: 720px;">
+            <strong style="color: #f59e0b;">Enforced Constraints:</strong>
+            <table style="width: 100%; margin-top: 12px; font-size: 0.82rem; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Maximum Total Score:</td>
+                    <td style="color: #00f2fe; font-family: 'Fira Code', monospace; font-weight: 700;">100 pts</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Minimum Score / Stage:</td>
+                    <td style="color: #00f2fe; font-family: 'Fira Code', monospace; font-weight: 700;">5 pts</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Stage Points Order:</td>
+                    <td style="color: #10b981; font-family: 'Fira Code', monospace;">Strictly Increasing (S1 &lt; S2 &lt; S3 &lt; S4 &lt; S5 &lt; S6)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Hint 1 Default Penalty:</td>
+                    <td style="color: #f59e0b; font-family: 'Fira Code', monospace; font-weight: 700;">-10% of stage base marks</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Hint 2 Default Penalty:</td>
+                    <td style="color: #f43f5e; font-family: 'Fira Code', monospace; font-weight: 700;">-50% of stage base marks</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Flag Encryption:</td>
+                    <td style="color: #10b981; font-family: 'Fira Code', monospace;">AES-256 Fernet (Authenticated Encryption)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 12px 5px 0; color: #94a3b8;">Admin Route:</td>
+                    <td style="color: #8b5cf6; font-family: 'Fira Code', monospace;">/{{ secret_token }}/admin</td>
+                </tr>
+            </table>
+        </div>
+
+    </div><!-- end admin-main -->
+</div><!-- end admin-layout -->
+
+<script>
+function recalcPoints() {
+    const inputs = document.querySelectorAll('.pts-field');
+    let total = 0;
+    inputs.forEach(i => { const v = parseInt(i.value) || 0; total += v; });
+    document.getElementById('pointsSum').textContent = total;
+    const ok = document.getElementById('pointsOK');
+    const warn = document.getElementById('pointsWarn');
+    if (total === 100) {
+        ok.textContent = '✔ Valid';
+        warn.textContent = '';
+    } else {
+        ok.textContent = '';
+        warn.textContent = `⚠️ Must equal 100! (Currently: ${total})`;
+    }
+}
+
+// Sidebar smooth scroll
+document.querySelectorAll('.sidebar-nav a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+        document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+        a.classList.add('active');
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}CyberVault : Operation ShadowTrace — Event Overview{% endblock %}
+
+{% block content %}
+<div class="home-hero-section">
+    <div class="hero-badge">CLASSIFIED CYBER INTELLIGENCE EXERCISE</div>
+    <h1 class="hero-title">Operation ShadowTrace</h1>
+    <p class="hero-subtitle">
+        An immersive, intelligence-grade Capture The Flag challenge simulating real-world adversary reconnaissance, 
+        cryptographic cryptanalysis, application penetration testing, digital forensics, and system compromise.
+    </p>
+
+    <div class="hero-cta-group">
+        {% if current_user %}
+        <a href="{{ url_for('challenges') }}" class="btn btn-primary hero-btn">
+            🎯 Enter Mission Console (Challenges)
+        </a>
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-secondary hero-btn">
+            🏆 View Live Ranking
+        </a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary hero-btn">
+            🚀 Register Cadet Profile
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-secondary hero-btn">
+            🔐 Sign In to Console
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Key Event Highlights Grid -->
+<div class="stats-grid" style="margin-bottom: 40px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(0,242,254,0.1);">🎯</div>
+        <div>
+            <div class="stat-val" style="color: var(--cyan-neon);">6 Stages</div>
+            <div class="stat-label">Progressive Operations</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16,185,129,0.1);">🏅</div>
+        <div>
+            <div class="stat-val" style="color: var(--emerald-neon);">{{ total_max_points }} Points</div>
+            <div class="stat-label">Maximum Available Score</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(139,92,246,0.1);">⛓️</div>
+        <div>
+            <div class="stat-val" style="color: var(--purple-neon);">Sequential</div>
+            <div class="stat-label">Challenge Unlock Flow</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245,158,11,0.1);">💡</div>
+        <div>
+            <div class="stat-val" style="color: var(--amber-neon);">Hint Intel</div>
+            <div class="stat-label">Hint 1 Free / Hint 2 -50%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Mission Briefing & Storyline -->
+<div class="home-content-card">
+    <div class="section-badge">MISSION BRIEFING & INCIDENT NARRATIVE</div>
+    <h2 class="section-heading">The CyberVault Breach</h2>
+    <div class="briefing-text">
+        <p>
+            At 03:14 UTC, anomaly detection sentries within the CyberVault high-security enclave registered abnormal traffic signatures. 
+            An advanced persistent threat actor, identified as <em>ShadowTrace</em>, executed a coordinated multi-vector intrusion against 
+            the sovereign infrastructure.
+        </p>
+        <p>
+            As an elite cyber defense operative, your mission is to trace the adversary's digital footprint across all vectors of compromise. 
+            You must advance through the breach timeline step by step: probe perimeter defenses, decipher intercepted communications, 
+            dissect rogue binary artifacts, exploit authentication vulnerabilities, comb forensic access logs for stealthy anomalies, 
+            and confront the compromised backup host before the adversary solidifies their persistence.
+        </p>
+    </div>
+</div>
+
+<!-- Rules of Engagement & Scoring Architecture -->
+<div class="home-rules-grid">
+    <div class="rule-box">
+        <div class="rule-icon">🔒</div>
+        <div class="rule-title">Sequential Stage Progression</div>
+        <p class="rule-desc">
+            Challenges are locked in sequence. Operators must successfully breach and capture the flag for the active stage before the next stage container reveals itself. Only completed stages and your current active frontier are visible.
+        </p>
+    </div>
+
+    <div class="rule-box">
+        <div class="rule-icon">⚖️</div>
+        <div class="rule-title">Strictly Ascending Scoring</div>
+        <p class="rule-desc">
+            Marks strictly increase with each operational stage (Stage 1 through Stage 6) totalling 100 points. Greater complexity delivers proportionally higher point yields for competitive placement.
+        </p>
+    </div>
+
+    <div class="rule-box">
+        <div class="rule-icon">💡</div>
+        <div class="rule-title">Tactical Hint Protocol</div>
+        <p class="rule-desc">
+            <strong>Hint 1</strong> provides general guidance and is available to all operatives without deduction. <strong>Hint 2</strong> grants direct tactical clarity, but triggers a <strong>50% mark deduction</strong> from the stage score if unlocked.
+        </p>
+    </div>
+
+    <div class="rule-box">
+        <div class="rule-icon">🚩</div>
+        <div class="rule-title">Cryptographic Flag Standard</div>
+        <p class="rule-desc">
+            All recovered flags conform to the strict format <code class="code-pill">CVT{...}</code>. Flags are cryptographically evaluated on submission and stored securely in backend vaults under AES-256 encryption.
+        </p>
+    </div>
+</div>
+
+<!-- Event Readiness CTA -->
+<div class="home-cta-banner">
+    <div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px; color: var(--text-main);">Ready to Begin Operation ShadowTrace?</h3>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">
+            Authenticate your operative credentials to access the challenge console and view the initial target link.
+        </p>
+    </div>
+    <div>
+        {% if current_user %}
+        <a href="{{ url_for('challenges') }}" class="btn btn-primary" style="padding: 10px 24px;">
+            Go to Challenges ➔
+        </a>
+        {% else %}
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Sign In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Create Account</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

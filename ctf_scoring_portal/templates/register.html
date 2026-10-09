@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Register — CyberVault CTF{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 3rem; margin-bottom: 8px;">🛡️</div>
+        <h1 class="auth-title">Join Operation ShadowTrace</h1>
+        <p class="auth-subtitle">Register your operator profile to compete across all 6 cybersecurity stages</p>
+    </div>
+
+    <div class="auth-card">
+        <form method="POST" action="{{ url_for('register') }}" id="registerForm" autocomplete="off">
+            <div class="form-group">
+                <label class="form-label" for="username">Operator Callsign (Username)</label>
+                <input type="text" id="username" name="username" class="form-control"
+                    placeholder="e.g. shadow_cadet" required minlength="3" maxlength="24" autofocus autocomplete="username">
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">3–24 characters · unique callsign</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name (Optional)</label>
+                <input type="text" id="full_name" name="full_name" class="form-control"
+                    placeholder="e.g. Kavinda Perera" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="team_name">Team / Unit Name (Optional)</label>
+                <input type="text" id="team_name" name="team_name" class="form-control"
+                    placeholder="e.g. ByteGuardians">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Authentication Passphrase</label>
+                <input type="password" id="password" name="password" class="form-control"
+                    placeholder="Choose a strong password" required minlength="6" autocomplete="new-password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm Passphrase</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                    placeholder="Repeat passphrase" required minlength="6" autocomplete="new-password">
+                <div id="pwMatchMsg" style="font-size: 0.78rem; margin-top: 6px; font-weight: 500;"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="registerBtn" style="width: 100%; padding: 13px; font-size: 0.95rem; margin-top: 6px;">
+                🚀 Register & Start Operation
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--text-dim);">
+            Already have an account?
+            <a href="{{ url_for('login') }}" style="color: var(--cyan-neon); font-weight: 600;">Sign In →</a>
+        </div>
+    </div>
+
+    <!-- Scoring Rules Box -->
+    <div style="margin-top: 20px; background: rgba(0,242,254,0.05); border: 1px solid rgba(0,242,254,0.15); border-radius: var(--radius-md); padding: 16px 20px;">
+        <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.8;">
+            <div style="font-weight: 700; color: var(--cyan-neon); margin-bottom: 6px;">🎮 CTF Scoring Overview</div>
+            <div>📊 <strong style="color: var(--text-main);">6 stages</strong> unlocked in sequential order</div>
+            <div>🏅 <strong style="color: var(--text-main);">100 points</strong> total maximum score</div>
+            <div>💡 <strong style="color: var(--emerald-neon);">Hint 1:</strong> Standard intel (free)</div>
+            <div>🔑 <strong style="color: var(--rose-neon);">Hint 2:</strong> Tactical clearance (-50% deduction)</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('registerForm');
+const pwd = document.getElementById('password');
+const cpwd = document.getElementById('confirm_password');
+const msg = document.getElementById('pwMatchMsg');
+
+function checkMatch() {
+    if (!cpwd.value && !pwd.value) { 
+        msg.textContent = ''; 
+        return; 
+    }
+    if (pwd.value && cpwd.value) {
+        if (pwd.value === cpwd.value) {
+            msg.style.color = 'var(--emerald-neon)';
+            msg.textContent = '✔ Passphrases match!';
+        } else {
+            msg.style.color = 'var(--rose-neon)';
+            msg.textContent = '✗ Passphrases do not match.';
+        }
+    }
+}
+
+cpwd.addEventListener('input', checkMatch);
+pwd.addEventListener('input', checkMatch);
+
+form.addEventListener('submit', function(e) {
+    if (pwd.value !== cpwd.value) {
+        e.preventDefault();
+        msg.style.color = 'var(--rose-neon)';
+        msg.textContent = '✗ Passphrases do not match. Please ensure both passwords match before submitting.';
+        cpwd.focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

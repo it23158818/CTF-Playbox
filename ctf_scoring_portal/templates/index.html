@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block title %}Challenges — CyberVault CTF{% endblock %}
+
+{% block content %}
+<div class="page-header" style="max-width: 1050px; margin: 0 auto 28px;">
+    <div>
+        <h1 class="page-title" style="background: linear-gradient(90deg, #ffffff, var(--cyan-neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Operation ShadowTrace
+        </h1>
+        <p class="page-subtitle">🔐 Sequential Operations · Solve each stage to unlock the next frontier</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <span class="user-score-badge" style="font-size: 0.95rem; padding: 8px 18px;">
+            Total Score: <strong>{{ user_score }}</strong> / {{ total_max_points }} pts
+        </span>
+    </div>
+</div>
+
+<!-- ============================================================ PROGRESS BAR SECTION -->
+<div class="progress-section-card">
+    <div class="progress-info-row">
+        <div class="progress-title-block">
+            <span class="progress-icon">⚡</span>
+            <div>
+                <strong style="color: var(--text-main); font-size: 1rem;">Mission Completion Progress</strong>
+                <div style="font-size: 0.8rem; color: var(--text-dim); font-family: var(--font-mono);">
+                    Stage {{ solved_count }} of {{ total_stages_count }} Completed
+                </div>
+            </div>
+        </div>
+        <div class="progress-percentage-pill">
+            {{ progress_pct }}%
+        </div>
+    </div>
+    <div class="progress-track">
+        <div class="progress-fill" style="width: {{ progress_pct }}%;"></div>
+    </div>
+</div>
+
+<!-- ============================================================ SEQUENTIAL WIDE STAGE BOXES -->
+<div class="stages-vertical-stack">
+{% for stage in stages %}
+<div class="stage-wide-box {{ 'solved' if stage.is_solved }}" id="stage-box-{{ stage.stage_id }}">
+    
+    <!-- Top Header: Stage Identifier, Badges, Points -->
+    <div class="stage-wide-header">
+        <div class="stage-wide-title-row">
+            <span class="stage-number-badge">Stage {{ stage.stage_id }}</span>
+            {% if stage.is_solved %}
+            <span class="badge badge-emerald">✔ Solved</span>
+            {% else %}
+            <span class="badge badge-cyan">Active Target</span>
+            {% endif %}
+        </div>
+        <div class="stage-points-pill">
+            <strong>{{ stage.base_points }}</strong> pts
+        </div>
+    </div>
+
+    <!-- Cryptic Directive / Hidden Meaning Briefing -->
+    <div class="stage-directive-card">
+        <div class="directive-label">
+            <span>🔍 CLASSIFIED INTEL BRIEFING</span>
+        </div>
+        <p class="directive-text">
+            {{ stage.cryptic_brief }}
+        </p>
+    </div>
+
+    <!-- Target Gateway Link (ONLY DISPLAYED IN STAGE 1) -->
+    {% if stage.stage_id == 1 %}
+    <div class="stage-target-container">
+        <span class="target-tag">🌐 TARGET ACCESS:</span>
+        <a href="{{ stage.target_url }}" target="_blank" class="target-anchor">
+            {{ stage.target_url }} ↗
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Status Banner for Solved Stages -->
+    {% if stage.is_solved %}
+    <div class="stage-status-banner success" style="display:block; margin: 20px 0;">
+        🎉 <strong>Stage {{ stage.stage_id }} Conquered!</strong> Earned <strong>{{ stage.points_earned }}</strong> / {{ stage.base_points }} pts
+        {% if stage.penalty_deducted > 0 %}
+        <span style="color: var(--amber-neon); margin-left: 8px;">(Penalty Applied: -{{ stage.penalty_deducted }} pts)</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Hints Section -->
+    {% if current_user and not stage.is_solved %}
+    <div class="stage-hints-wide-block">
+        
+        <!-- Hint 1: Always Shown Normally (Free / No Penalty) -->
+        <div class="hint-normal-card">
+            <div class="hint-normal-header">
+                <span style="color: var(--cyan-neon);">💡 Hint 1</span>
+                <span class="hint-free-tag">Standard Intel (No deduction)</span>
+            </div>
+            <div class="hint-normal-body">
+                {{ stage.user_hint1 }}
+            </div>
+        </div>
+
+        <!-- Hint 2: Deduction Warning & Unlock Option -->
+        {% if 2 in stage.hints_unlocked %}
+        <div class="hint-penalty-card revealed">
+            <div class="hint-penalty-header">
+                <span style="color: var(--rose-neon);">🔑 Hint 2 (Tactical Clearance)</span>
+                <span class="hint-deduction-tag">Unlocked (-50% marks applied)</span>
+            </div>
+            <div class="hint-penalty-body">
+                {{ stage.user_hint2 }}
+            </div>
+        </div>
+        {% else %}
+        <div class="hint-locked-action" id="hint2-locked-{{ stage.stage_id }}">
+            <button class="btn btn-unlock-hint2" onclick="requestHint({{ stage.stage_id }}, 2)">
+                🔑 Unlock Hint 2 <span style="font-size:0.8rem; opacity:0.85;">(-50% Marks Deduction)</span>
+            </button>
+            <div class="hint-penalty-card revealed" id="hint2-box-{{ stage.stage_id }}" style="display:none; margin-top:14px;"></div>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <!-- In-Box Flag Submission Form (Only if active & not solved) -->
+    {% if not stage.is_solved %}
+    <div class="stage-submission-container">
+        <label class="flag-label" for="flag-{{ stage.stage_id }}">Enter Recovered Flag:</label>
+        <div class="flag-wide-group">
+            <input type="text" 
+                   class="flag-input-wide" 
+                   id="flag-{{ stage.stage_id }}" 
+                   placeholder="CVT{...}" 
+                   autocomplete="off" 
+                   spellcheck="false"
+                   onkeydown="if(event.key==='Enter') submitFlag({{ stage.stage_id }})">
+            <button class="btn btn-primary btn-submit-wide" onclick="submitFlag({{ stage.stage_id }})">
+                Submit Flag
+            </button>
+        </div>
+        <div class="stage-status-banner" id="status-{{ stage.stage_id }}"></div>
+    </div>
+    {% endif %}
+
+</div>
+{% endfor %}
+
+{% if solved_count == total_stages_count %}
+<div class="congrats-card">
+    <div style="font-size: 2.2rem; margin-bottom: 8px;">👑</div>
+    <h2 style="color: var(--emerald-neon); font-size: 1.5rem; margin-bottom: 8px;">All Operational Stages Conquered!</h2>
+    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 16px;">
+        Outstanding performance, operator. You have neutralized the entire Operation ShadowTrace intrusion chain. Check your placement on the live rankings.
+    </p>
+    <a href="{{ url_for('leaderboard') }}" class="btn btn-primary">🏆 View Live Ranking</a>
+</div>
+{% endif %}
+</div>
+
+<!-- ============================================================ HINT 2 CONFIRMATION MODAL -->
+<div class="modal-overlay" id="hintModal">
+    <div class="modal-box">
+        <div class="modal-title" id="hintModalTitle">⚠️ Unlock Hint 2?</div>
+        <div class="modal-body" id="hintModalBody">
+            <p>You are requesting tactical guidance for this stage.</p>
+            <div class="penalty-warning" style="color: var(--rose-neon); margin-top: 12px;">
+                ⚠️ <strong>Penalty Warning:</strong> Revealing Hint 2 will permanently deduct <strong>50%</strong> of the stage marks upon correct flag submission.
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-hint-penalty-confirm" id="hintModalConfirmBtn" onclick="confirmHint()">Unlock Hint 2 (-50%)</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let pendingHintStage = null, pendingHintNum = null;
+
+function requestHint(stageId, hintNum) {
+    pendingHintStage = stageId;
+    pendingHintNum = hintNum;
+    document.getElementById('hintModalTitle').innerHTML = `🔑 Unlock Hint 2 for Stage ${stageId}?`;
+    document.getElementById('hintModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('hintModal').style.display = 'none';
+    pendingHintStage = null; 
+    pendingHintNum = null;
+}
+
+async function confirmHint() {
+    if (!pendingHintStage || !pendingHintNum) return;
+    const sId = pendingHintStage;
+    const hNum = pendingHintNum;
+    closeModal();
+    
+    const data = new FormData();
+    data.append('stage_id', sId);
+    data.append('hint_number', hNum);
+    
+    try {
+        const r = await fetch('/unlock_hint', { method: 'POST', body: data });
+        const json = await r.json();
+        if (json.success) {
+            const boxId = `hint2-box-${sId}`;
+            const box = document.getElementById(boxId);
+            const lockAction = document.getElementById(`hint2-locked-${sId}`);
+            if (box) {
+                box.innerHTML = `
+                    <div class="hint-penalty-header">
+                        <span style="color: var(--rose-neon);">🔑 Hint 2 (Tactical Clearance)</span>
+                        <span class="hint-deduction-tag">Unlocked (-50% marks applied)</span>
+                    </div>
+                    <div class="hint-penalty-body">${json.hint_text}</div>
+                `;
+                box.style.display = 'block';
+                // Hide the unlock button
+                if (lockAction) {
+                    const btn = lockAction.querySelector('button');
+                    if (btn) btn.style.display = 'none';
+                }
+            }
+        } else {
+            alert(json.message || 'Error unlocking hint.');
+        }
+    } catch(e) {
+        console.error(e);
+        alert('Network error when attempting to unlock hint.');
+    }
+}
+
+async function submitFlag(stageId) {
+    const input = document.getElementById(`flag-${stageId}`);
+    const banner = document.getElementById(`status-${stageId}`);
+    const flagVal = input.value.trim();
+    
+    if (!flagVal) {
+        banner.className = 'stage-status-banner error';
+        banner.style.display = 'block';
+        banner.textContent = '⚠ Please enter a flag in CVT{...} format.';
+        return;
+    }
+    
+    banner.className = 'stage-status-banner';
+    banner.style.display = 'block';
+    banner.textContent = '⏳ Evaluating cryptographic submission...';
+    
+    const data = new FormData();
+    data.append('stage_id', stageId);
+    data.append('flag', flagVal);
+    
+    try {
+        const r = await fetch('/submit_flag', { method: 'POST', body: data });
+        const json = await r.json();
+        banner.className = `stage-status-banner ${json.success ? 'success' : 'error'}`;
+        banner.textContent = json.message;
+        
+        if (json.success) {
+            input.disabled = true;
+            input.value = '';
+            // Reload after 1.5 seconds so the next sequential stage is rendered
+            setTimeout(() => location.reload(), 1500);
+        }
+    } catch(e) {
+        banner.className = 'stage-status-banner error';
+        banner.textContent = '⚠ Network error. Please retry.';
+    }
+}
+
+document.getElementById('hintModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Sign In — CyberVault CTF{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 3rem; margin-bottom: 8px;">🔐</div>
+        <h1 class="auth-title">Operator Authentication</h1>
+        <p class="auth-subtitle">Sign in to access operational challenges and claim points</p>
+    </div>
+
+    <div class="auth-card">
+        <form method="POST" action="{{ url_for('login', next=request.args.get('next')) if request.args.get('next') else url_for('login') }}" id="loginForm" autocomplete="off">
+            <div class="form-group">
+                <label class="form-label" for="username">Operator Callsign (Username)</label>
+                <input type="text" id="username" name="username" class="form-control"
+                    placeholder="Your registered username" required autofocus autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Authentication Passphrase</label>
+                <input type="password" id="password" name="password" class="form-control"
+                    placeholder="••••••••••••" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 0.95rem; margin-top: 6px;">
+                ⚡ Authenticate & Enter
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--text-dim);">
+            Not registered yet?
+            <a href="{{ url_for('register') }}" style="color: var(--cyan-neon); font-weight: 600;">Create Profile →</a>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 16px; font-size: 0.82rem; color: var(--text-dim);">
+        <a href="{{ url_for('home') }}" style="color: var(--text-dim); text-decoration: none;">← Return to Event Overview</a>
+    </div>
+</div>
+{% endblock %}
