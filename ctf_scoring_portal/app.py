@@ -337,10 +337,19 @@ def admin_portal():
     if not session.get("is_admin"):
         # Show Admin Login Form
         if request.method == "POST":
-            user = request.form.get("admin_user", "").strip()
+            user = request.form.get("admin_user", "").strip().lower()
             pwd = request.form.get("admin_pass", "").strip()
-            if user == ADMIN_USERNAME and pwd == ADMIN_PASSWORD:
+            
+            # Authenticate dynamically against MongoDB database
+            is_valid_admin, admin_doc = db_manager.authenticate_admin(user, pwd)
+            if not is_valid_admin and user == ADMIN_USERNAME.lower() and pwd == ADMIN_PASSWORD:
+                is_valid_admin = True
+                admin_doc = {"username": "admin", "role": "admin"}
+
+            if is_valid_admin:
                 session["is_admin"] = True
+                session["username"] = admin_doc.get("username", "admin")
+                session["role"] = "admin"
                 flash("Admin Authorization Verified. Welcome to CyberVault Command.", "success")
                 return redirect(url_for("admin_portal"))
             else:

@@ -215,8 +215,21 @@ class DatabaseManager:
 
             self.db.flags.insert_many(docs_to_insert)
 
+        # Ensure administrative user exists in users collection
+        if not self.db.users.find_one({"role": "admin"}):
+            print("[+] [MongoDB] Seeding administrative account into users collection...")
+            admin_doc = {
+                "username": "admin",
+                "password_hash": bcrypt.hashpw(b"CyberVaultAdmin#2026!", bcrypt.gensalt()).decode("utf-8"),
+                "full_name": "Chief System Administrator",
+                "team_name": "CyberVault Command Enclave",
+                "role": "admin",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            self.db.users.replace_one({"username": "admin"}, admin_doc, upsert=True)
+
         # Seed sample benchmark participants for the scoreboard if empty
-        if self.db.users.count_documents({}) == 0:
+        if self.db.users.count_documents({"role": "participant"}) == 0:
             print("[+] [MongoDB] Seeding initial leaderboard benchmark users...")
             demo_users = [
                 {
@@ -327,6 +340,17 @@ class DatabaseManager:
         stored_hash = user_doc.get("password_hash", "")
         if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
             return True, user_doc
+        return False, None
+
+    def authenticate_admin(self, username, password):
+        """Authenticates admin credentials dynamically against the MongoDB users collection."""
+        clean_user = username.strip().lower()
+        admin_doc = self.db.users.find_one({"username": clean_user, "role": "admin"})
+        if not admin_doc:
+            return False, None
+        stored_hash = admin_doc.get("password_hash", "")
+        if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
+            return True, admin_doc
         return False, None
 
     # ==========================================================================
