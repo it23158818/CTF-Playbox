@@ -21,18 +21,18 @@ class VercelPathMiddleware:
         # Clear SCRIPT_NAME so url_for generates clean paths without /api/index.py
         environ["SCRIPT_NAME"] = ""
 
-        # Vercel passes the original requested path in HTTP_X_VERCEL_MATCHED_PATH
-        matched_path = environ.get("HTTP_X_VERCEL_MATCHED_PATH")
-        if matched_path:
-            environ["PATH_INFO"] = matched_path
+        # Extract path from HTTP_X_VERCEL_MATCHED_PATH or PATH_INFO
+        raw_path = environ.get("HTTP_X_VERCEL_MATCHED_PATH") or environ.get("PATH_INFO", "")
+        
+        # Normalize: if Vercel passes /api/index or /api/index.py, map to /
+        if raw_path in ("/api/index", "/api/index.py", ""):
+            environ["PATH_INFO"] = "/"
+        elif raw_path.startswith("/api/index/"):
+            environ["PATH_INFO"] = raw_path[len("/api/index"):]
+        elif raw_path.startswith("/api/index.py/"):
+            environ["PATH_INFO"] = raw_path[len("/api/index.py"):]
         else:
-            path = environ.get("PATH_INFO", "")
-            if path in ("/api/index.py", "/api/index"):
-                environ["PATH_INFO"] = "/"
-            elif path.startswith("/api/index.py/"):
-                environ["PATH_INFO"] = path[len("/api/index.py"):]
-            elif path.startswith("/api/index/"):
-                environ["PATH_INFO"] = path[len("/api/index"):]
+            environ["PATH_INFO"] = raw_path
 
         return self.wsgi_app(environ, start_response)
 
