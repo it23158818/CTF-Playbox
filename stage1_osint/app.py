@@ -10,7 +10,7 @@ import socketserver
 import json
 import urllib.parse
 import os
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, send_from_directory
 
 PORT = int(os.environ.get("PORT", 8081))
 STAGE1_FLAG = os.environ.get("STAGE1_FLAG", "CVT{0s1nt_st4g1ng_l34k_8291}")
@@ -18,8 +18,10 @@ STAGE2_URL = os.environ.get("STAGE2_URL", "http://localhost:8082")
 CORRECT_HOSTNAME = "vault-staging.cybervaulttech.com"
 DECOY_HOSTNAME = "vault-legacy-01"
 
-template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-app = Flask(__name__, template_folder=template_dir)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR, static_url_path="/static")
 
 CAREERS_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -466,6 +468,26 @@ SOCIAL_HTML = """<!DOCTYPE html>
             font-size: 0.8rem;
             color: var(--accent-blue);
         }
+        .post-image-container {
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            background: #030712;
+            text-align: center;
+        }
+        .post-image {
+            max-width: 100%;
+            max-height: 460px;
+            height: auto;
+            display: inline-block;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.25s ease;
+        }
+        .post-image:hover {
+            transform: scale(1.015);
+        }
         .verify-box {
             background: rgba(15, 23, 42, 0.9);
             border: 1px solid var(--border-color);
@@ -576,6 +598,29 @@ SOCIAL_HTML = """<!DOCTYPE html>
 
         <div class="post-card">
             <div class="post-author">
+                <div class="avatar" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">AR</div>
+                <div class="author-details">
+                    <h4>Alex Rivera</h4>
+                    <span>@arivera_dev &bull; Principal DevOps Engineer &bull; 45m ago</span>
+                </div>
+            </div>
+            <div class="post-body">
+                Fresh branding deployed for our internal staging diagnostics dashboard! 🏛️ In honor of our upcoming classic cryptography drills and key rotation protocols, we've set William Shakespeare's <em>Julius Caesar</em> as our updated staging asset. Remember team: <em>"Experience is the teacher of all things."</em> Keep your ciphers rotated and audit your asset metadata! 🔐📖
+            </div>
+            <div class="post-image-container">
+                <img src="/static/julius_caesar.jpg" alt="William Shakespeare Julius Caesar - Staging Asset" class="post-image" />
+            </div>
+            <div class="post-tags">
+                <span>#DevOps</span>
+                <span>#JuliusCaesar</span>
+                <span>#ClassicalCrypto</span>
+                <span>#CyberVault</span>
+                <span>#StagingDiagnostics</span>
+            </div>
+        </div>
+
+        <div class="post-card">
+            <div class="post-author">
                 <div class="avatar">SM</div>
                 <div class="author-details">
                     <h4>Sarah Miller</h4>
@@ -589,6 +634,16 @@ SOCIAL_HTML = """<!DOCTYPE html>
                 <span>#SecOps</span>
                 <span>#InformationSecurity</span>
             </div>
+        </div>
+
+        <div class="verify-box">
+            <h3>Target Validation Console</h3>
+            <p>Discovered the active staging infrastructure hostname from our social updates? Submit it below to obtain the Stage 1 clearance flag.</p>
+            <div class="form-row">
+                <input type="text" id="hostInput" placeholder="e.g. target-node.cybervaulttech.com" />
+                <button onclick="verifyHostname()">Submit Host</button>
+            </div>
+            <div id="resultBox" class="result"></div>
         </div>
     </div>
 
@@ -684,6 +739,10 @@ def social():
 def robots():
     return Response(ROBOTS_TXT, mimetype="text/plain; charset=utf-8")
 
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    return send_from_directory(STATIC_DIR, filename)
+
 @app.route("/api/status")
 def api_status():
     return jsonify({
@@ -764,6 +823,21 @@ class Stage1Handler(http.server.BaseHTTPRequestHandler):
                 "status": "online",
                 "challenge": "The Careers Page Slip-Up"
             }).encode("utf-8"))
+
+        elif path.startswith("/static/"):
+            rel_name = path[len("/static/"):]
+            file_path = os.path.join(STATIC_DIR, rel_name)
+            if os.path.exists(file_path):
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+            else:
+                self.send_response(404)
+                self.end_headers()
 
         else:
             self.send_response(404)
