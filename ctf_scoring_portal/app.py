@@ -92,6 +92,8 @@ def login_required(view_func):
 # ------------------------------------------------------------------------------
 @app.route("/")
 @app.route("/home")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
     return render_template("home.html")
