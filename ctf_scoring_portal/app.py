@@ -4,7 +4,7 @@ import functools
 from datetime import datetime
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, jsonify, flash, abort
+    session, jsonify, flash, abort, send_from_directory
 )
 from dotenv import load_dotenv
 
@@ -90,6 +90,14 @@ def login_required(view_func):
 # ------------------------------------------------------------------------------
 # PARTICIPANT ROUTES
 # ------------------------------------------------------------------------------
+@app.route("/static/<path:filename>")
+@app.route("/public/<path:filename>")
+def serve_static(filename):
+    """Explicitly serve static assets for serverless environments where static_folder may fail."""
+    static_dir = os.path.join(BASE_DIR, "static")
+    return send_from_directory(static_dir, filename)
+
+
 @app.route("/")
 @app.route("/home")
 @app.route("/api/index")
