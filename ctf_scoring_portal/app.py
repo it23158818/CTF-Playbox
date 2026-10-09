@@ -24,7 +24,11 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 from db import db_manager
 from crypto_vault import encrypt_flag, decrypt_flag, get_crypto_status
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
 app.secret_key = os.getenv("SECRET_KEY", "cybervault_super_secret_session_key_2026!")
 
 # Make built-ins available in Jinja2 templates
