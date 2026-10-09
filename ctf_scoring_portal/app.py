@@ -100,6 +100,8 @@ def serve_static(filename):
 
 @app.route("/")
 @app.route("/home")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
     return render_template("home.html")
