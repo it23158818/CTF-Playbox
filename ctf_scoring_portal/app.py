@@ -98,10 +98,10 @@ def serve_static(filename):
     return send_from_directory(static_dir, filename)
 
 
-@app.route("/")
-@app.route("/home")
-@app.route("/api/index")
-@app.route("/api/index.py")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/home", methods=["GET", "POST"])
+@app.route("/api/index", methods=["GET", "POST"])
+@app.route("/api/index.py", methods=["GET", "POST"])
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
     # When Vercel rewrites /login, /register, etc. to /api/index?path=...
@@ -114,10 +114,12 @@ def home():
         return leaderboard()
     elif target_path in ("/challenges", "challenges"):
         return challenges()
-    elif target_path in ("/admin_login", "admin_login"):
-        return admin_login()
-    elif target_path in ("/admin_panel", "admin_panel"):
-        return admin_panel()
+    elif target_path in (f"/{ADMIN_ROUTE_SECRET}/admin", f"{ADMIN_ROUTE_SECRET}/admin", "/admin_login", "admin_login"):
+        return admin_portal()
+    elif target_path in ("/submit_flag", "submit_flag"):
+        return submit_flag()
+    elif target_path in ("/unlock_hint", "unlock_hint"):
+        return unlock_hint()
 
     return render_template("home.html")
 
