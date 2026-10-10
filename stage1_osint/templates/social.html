@@ -148,6 +148,26 @@
             font-size: 0.8rem;
             color: var(--accent-blue);
         }
+        .post-image-container {
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            background: #030712;
+            text-align: center;
+        }
+        .post-image {
+            max-width: 100%;
+            max-height: 460px;
+            height: auto;
+            display: inline-block;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.25s ease;
+        }
+        .post-image:hover {
+            transform: scale(1.015);
+        }
         .verify-box {
             background: rgba(15, 23, 42, 0.9);
             border: 1px solid var(--border-color);
@@ -258,6 +278,29 @@
 
         <div class="post-card">
             <div class="post-author">
+                <div class="avatar" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">AR</div>
+                <div class="author-details">
+                    <h4>Alex Rivera</h4>
+                    <span>@arivera_dev &bull; Principal DevOps Engineer &bull; 45m ago</span>
+                </div>
+            </div>
+            <div class="post-body">
+                Fresh branding deployed for our internal staging diagnostics dashboard! 🏛️ In honor of our upcoming classic cryptography drills and key rotation protocols, we've set William Shakespeare's <em>Julius Caesar</em> as our updated staging asset. Remember team: <em>"Experience is the teacher of all things."</em> Keep your ciphers rotated and audit your asset metadata! 🔐📖
+            </div>
+            <div class="post-image-container">
+                <img src="/static/julius_caesar.jpg" alt="William Shakespeare Julius Caesar - Staging Asset" class="post-image" />
+            </div>
+            <div class="post-tags">
+                <span>#DevOps</span>
+                <span>#JuliusCaesar</span>
+                <span>#ClassicalCrypto</span>
+                <span>#CyberVault</span>
+                <span>#StagingDiagnostics</span>
+            </div>
+        </div>
+
+        <div class="post-card">
+            <div class="post-author">
                 <div class="avatar">SM</div>
                 <div class="author-details">
                     <h4>Sarah Miller</h4>
@@ -271,6 +314,16 @@
                 <span>#SecOps</span>
                 <span>#InformationSecurity</span>
             </div>
+        </div>
+
+        <div class="verify-box">
+            <h3>Target Validation Console</h3>
+            <p>Discovered the active staging infrastructure hostname from our social updates? Submit it below to obtain the Stage 1 clearance flag.</p>
+            <div class="form-row">
+                <input type="text" id="hostInput" placeholder="e.g. target-node.cybervaulttech.com" />
+                <button onclick="verifyHostname()">Submit Host</button>
+            </div>
+            <div id="resultBox" class="result"></div>
         </div>
     </div>
 

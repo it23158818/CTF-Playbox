@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberVault | Security Operations Console</title>
+    <meta name="description" content="CyberVault Stage 5 - Digital Forensics & Security Operations Console with log trail investigation, user management, and incident response tools.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ─── Design Tokens ─────────────────────────────────────────────────── */
+        :root {
+            --bg-base:        #060a12;
+            --bg-surface:     #0d1424;
+            --bg-card:        #111c2e;
+            --bg-card-hover:  #162035;
+            --border:         #1e3050;
+            --border-bright:  #2a4070;
+            --accent-cyan:    #00d4ff;
+            --accent-cyan-dk: #0099bb;
+            --accent-amber:   #f59e0b;
+            --accent-red:     #ef4444;
+            --accent-green:   #10b981;
+            --accent-purple:  #8b5cf6;
+            --accent-blue:    #3b82f6;
+            --text-primary:   #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted:     #4a6080;
+            --sidebar-w:      240px;
+            --header-h:       60px;
+        }
+
+        /* ─── Reset & Base ──────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* ─── Sidebar ───────────────────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 20;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 1px; height: 100%;
+            background: linear-gradient(180deg, transparent, var(--accent-cyan) 40%, var(--accent-purple) 80%, transparent);
+            opacity: 0.35;
+        }
+
+        .sidebar-logo {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-badge {
+            font-size: 0.62rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-amber);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .logo-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-title span { color: var(--accent-cyan); }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 8px 8px 6px;
+            margin-top: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            text-decoration: none;
+            position: relative;
+            user-select: none;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 212, 255, 0.07);
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 212, 255, 0.12);
+            color: var(--accent-cyan);
+            border-color: rgba(0, 212, 255, 0.25);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -1px; top: 20%; bottom: 20%;
+            width: 3px;
+            background: var(--accent-cyan);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            padding: 1px 7px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-stage-info {
+            background: rgba(0, 212, 255, 0.07);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .sidebar-stage-info .stage-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .sidebar-stage-info .stage-name {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* ─── Main Content Area ─────────────────────────────────────────────── */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── Top Header Bar ────────────────────────────────────────────────── */
+        .topbar {
+            height: var(--header-h);
+            min-height: var(--header-h);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .topbar-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .topbar-title span {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 9999px;
+            padding: 4px 12px;
+            font-size: 0.72rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-green);
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .btn-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-bright); }
+
+        /* ─── Scrollable Page Area ──────────────────────────────────────────── */
+        .page-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 28px 40px;
+        }
+
+        .page-scroll::-webkit-scrollbar { width: 6px; }
+        .page-scroll::-webkit-scrollbar-track { background: transparent; }
+        .page-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* ─── Page Panels ───────────────────────────────────────────────────── */
+        .page-panel { display: none; }
+        .page-panel.active { display: block; }
+
+        /* ─── Section Header ────────────────────────────────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-header-left .page-badge {
+            font-size: 0.65rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .section-header-left h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section-header-left p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ─── Stat Cards ────────────────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .stat-card:hover { border-color: var(--border-bright); transform: translateY(-1px); }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-color, var(--accent-cyan)), transparent);
+        }
+
+        .stat-card.red   { --accent-color: var(--accent-red); }
+        .stat-card.amber { --accent-color: var(--accent-amber); }
+        .stat-card.green { --accent-color: var(--accent-green); }
+        .stat-card.purple{ --accent-color: var(--accent-purple); }
+        .stat-card.blue  { --accent-color: var(--accent-blue); }
+
+        .stat-icon {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            color: #fff;
+        }
+
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* ─── Cards / Panels ────────────────────────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon { font-size: 1rem; }
+
+        .card-body { padding: 20px; }
+
+        /* ─── Buttons ───────────────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-dk) 100%);
+            color: #000;
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-primary:hover { filter: brightness(1.15); transform: scale(1.02); }
+
+        .btn-ghost {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-bright); }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            border-color: #10b981;
+        }
+
+        .btn-green:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        /* ─── Search / Filters ──────────────────────────────────────────────── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 14px;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+        }
+
+        .search-box::placeholder { color: var(--text-muted); }
+
+        .filter-btn {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-family: 'Fira Code', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(0,212,255,0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(0,212,255,0.3);
+        }
+
+        /* ─── User Table ────────────────────────────────────────────────────── */
+        .table-wrapper { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 10px 16px;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(30,48,80,0.6);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: rgba(0,212,255,0.04); }
+        tbody tr:last-child { border-bottom: none; }
+
+        tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .user-avatar {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--avatar-a, #00d4ff), var(--avatar-b, #8b5cf6));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.87rem;
+        }
+
+        .user-username {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'Fira Code', monospace;
+            white-space: nowrap;
+        }
+
+        .role-vault_administrator { background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3); }
+        .role-vault_operator      { background: rgba(59,130,246,0.15); color: #60a5fa;              border: 1px solid rgba(59,130,246,0.3); }
+        .role-compliance_auditor  { background: rgba(139,92,246,0.15); color: #a78bfa;              border: 1px solid rgba(139,92,246,0.3); }
+        .role-service_account     { background: rgba(148,163,184,0.1); color: var(--text-secondary); border: 1px solid rgba(148,163,184,0.25); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-Active     { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .status-Inactive   { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
+        .status-Compromised{ background: rgba(239,68,68,0.15); color: #f87171;  border: 1px solid rgba(239,68,68,0.35); animation: status-pulse 2s infinite; }
+
+        @keyframes status-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+            50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0.15); }
+        }
+
+        .status-dot-sm {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .email-cell {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .time-cell {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-family: 'Fira Code', monospace;
+            white-space: nowrap;
+        }
+
+        .action-btns { display: flex; gap: 6px; }
+
+        .action-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-bright); }
+
+        /* ─── Log Terminal ──────────────────────────────────────────────────── */
+        .log-terminal {
+            background: #050810;
+            border: 1px solid #1a2840;
+            border-radius: 10px;
+            padding: 14px;
+            max-height: 460px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.77rem;
+            line-height: 1.65;
+            box-shadow: inset 0 2px 16px rgba(0,0,0,0.8);
+        }
+
+        .log-terminal::-webkit-scrollbar { width: 5px; }
+        .log-terminal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .log-line {
+            padding: 2px 6px;
+            border-radius: 3px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .log-line:hover { background: rgba(255,255,255,0.04); }
+
+        .status-200 { color: #4ade80; }
+        .status-401 { color: #f87171; background: rgba(239,68,68,0.07); }
+        .status-404 { color: #fbbf24; }
+        .highlight-breakthrough {
+            background: rgba(16,185,129,0.18) !important;
+            border-left: 3px solid #10b981;
+            color: #6ee7b7;
+            font-weight: 600;
+            margin: 2px 0;
+        }
+
+        /* ─── Flag Validation ───────────────────────────────────────────────── */
+        .flag-input {
+            flex: 1;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 16px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .flag-input:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+        }
+
+        .result-box {
+            margin-top: 14px;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .result-success {
+            background: rgba(16,185,129,0.12);
+            border: 1px solid var(--accent-green);
+            color: #6ee7b7;
+            display: block;
+        }
+
+        .result-fail {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid var(--accent-red);
+            color: #fca5a5;
+            display: block;
+        }
+
+        /* ─── Alert / Hint Box ──────────────────────────────────────────────── */
+        .alert-box {
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .alert-warning {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            color: #fcd34d;
+        }
+
+        .alert-info {
+            background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.25);
+            color: #67e8f9;
+        }
+
+        /* ─── Quick Filters ─────────────────────────────────────────────────── */
+        .quick-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            align-items: center;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .qf-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        /* ─── Dashboard Activity Feed ───────────────────────────────────────── */
+        .activity-list { display: flex; flex-direction: column; gap: 1px; }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(30,48,80,0.5);
+        }
+
+        .activity-item:last-child { border-bottom: none; }
+
+        .activity-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .activity-text { font-size: 0.83rem; color: var(--text-secondary); flex: 1; }
+        .activity-text strong { color: var(--text-primary); }
+        .activity-time { font-size: 0.72rem; color: var(--text-muted); font-family: 'Fira Code', monospace; margin-top: 3px; }
+
+        /* ─── Responsive ────────────────────────────────────────────────────── */
+        @media (max-width: 720px) {
+            .sidebar { display: none; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ SIDEBAR ══ -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-badge">CyberVault // Stage 5</span>
+        <div class="logo-title">Cyber<span>Vault</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <span class="nav-section-label">Main</span>
+
+        <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </div>
+
+        <div class="nav-item" id="nav-users" onclick="navigateTo('users')">
+            <span class="nav-icon">👥</span>
+            Users
+            <span class="nav-badge" id="nav-users-badge">7</span>
+        </div>
+
+        <div class="nav-item" id="nav-logs" onclick="navigateTo('logs')">
+            <span class="nav-icon">🔍</span>
+            Logs
+            <span class="nav-badge" id="nav-logs-badge">{{ failed_count }}</span>
+        </div>
+
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-stage-info">
+            <div class="stage-label">Active Stage</div>
+            <div class="stage-name">Digital Forensics</div>
+        </div>
+    </div>
+</aside>
+
+<!-- ═════════════════════════════════════════════════════════ MAIN AREA ══ -->
+<div class="main-wrapper">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+        <div class="topbar-title" id="topbar-title">
+            Dashboard <span>/ Overview</span>
+        </div>
+        <div class="topbar-actions">
+            <div class="topbar-pill">
+                <span class="status-dot"></span>
+                Port 5005 Online
+            </div>
+            <button class="btn-icon" title="Refresh" onclick="location.reload()">↺</button>
+        </div>
+    </header>
+
+    <!-- Scrollable Content -->
+    <div class="page-scroll">
+
+        <!-- ══════════════════════════════════════ PAGE: DASHBOARD ══ -->
+        <div class="page-panel active" id="page-dashboard">
+
+            <div class="section-header">
+                <div class="section-header-left">
+                    <span class="page-badge">Stage 5 // Digital Forensics</span>
+                    <h1>Security Operations Dashboard</h1>
+                    <p>Live incident overview · CyberVault Forensic Console</p>
+                </div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">📋</span>
+                    <div class="stat-label">Total Log Events</div>
+                    <div class="stat-value" id="dash-total">{{ total_lines }}</div>
+                    <div class="stat-sub">audit_access.log entries</div>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-icon">🚨</span>
+                    <div class="stat-label">401 Unauthorized</div>
+                    <div class="stat-value" style="color:#f87171">{{ failed_count }}</div>
+                    <div class="stat-sub">Brute-force attempts detected</div>
+                </div>
+                <div class="stat-card amber">
+                    <span class="stat-icon">🌐</span>
+                    <div class="stat-label">Threat Actor IP</div>
+                    <div class="stat-value" style="color:var(--accent-amber); font-size:1.05rem;">198.51.100.42</div>
+                    <div class="stat-sub">Identified attacker source</div>
+                </div>
+                <div class="stat-card purple">
+                    <span class="stat-icon">🎯</span>
+                    <div class="stat-label">Target Endpoint</div>
+                    <div class="stat-value" style="color:#a78bfa; font-size:1.05rem;">POST /admin</div>
+                    <div class="stat-sub">Sustained credential attack</div>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-icon">⚠️</span>
+                    <div class="stat-label">Compromised Accounts</div>
+                    <div class="stat-value" style="color:#f87171">1</div>
+                    <div class="stat-sub">svc_backup — service account</div>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-icon">👤</span>
+                    <div class="stat-label">System Users</div>
+                    <div class="stat-value" style="color:var(--accent-green)">7</div>
+                    <div class="stat-sub">Registered accounts</div>
+                </div>
+            </div>
+
+            <!-- Incident Alert -->
+            <div class="alert-box alert-warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>Active Incident — Severity HIGH:</strong> Attacker IP <code>198.51.100.42</code> achieved a successful 200 OK bypass on POST /admin after 13 brute-force attempts. Leaked <code>x-debug-flag</code> header and SSH credentials were discovered in the log trail.
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span class="icon">📡</span> Recent Incident Timeline</div>
+                    <button class="btn btn-ghost" onclick="navigateTo('logs')">View All Logs →</button>
+                </div>
+                <div class="card-body">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:var(--accent-red)"></div>
+                            <div>
+                                <div class="activity-text"><strong>Brute-force attack detected</strong> — 13x POST /admin 401 Unauthorized from <code>198.51.100.42</code></div>
+                                <div class="activity-time">2026-10-08 02:11:25 → 02:12:41 UTC</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:var(--accent-amber)"></div>
+                            <div>
+                                <div class="activity-text"><strong>Reconnaissance scan</strong> — Attacker probed /.env, /config.json, /phpmyadmin, /wp-login.php</div>
+                                <div class="activity-time">2026-10-08 02:09:10 UTC</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:var(--accent-green)"></div>
+                            <div>
+                                <div class="activity-text"><strong>Bypass succeeded — 200 OK</strong> — <code>x-debug-flag</code> header leaked with flag + SSH credentials for <code>svc_backup</code></div>
+                                <div class="activity-time">2026-10-08 02:12:55 UTC</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background:var(--accent-purple)"></div>
+                            <div>
+                                <div class="activity-text"><strong>Lateral movement risk</strong> — SSH credentials to <code>10.0.6.10:2222</code> exposed; Stage 6 pivot possible</div>
+                                <div class="activity-time">Post-breach exposure</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage Hint -->
+            <div class="alert-box alert-info">
+                <span>💡</span>
+                <div>
+                    <strong>Investigation Hint:</strong> Navigate to <strong>Logs</strong> and filter by <code>x-debug-flag</code> or <code>200 14820</code> to locate the breakthrough entry. Extract the <code>CVT{...}</code> flag value and submit it in <strong>Submit Flag</strong>.
+                </div>
+            </div>
+
+        </div>
+        <!-- END DASHBOARD -->
+
+
+        <!-- ══════════════════════════════════════════ PAGE: USERS ══ -->
+        <div class="page-panel" id="page-users">
+
+            <div class="section-header">
+                <div class="section-header-left">
+                    <span class="page-badge">Access Control // IAM</span>
+                    <h1>User Management</h1>
+                    <p>CyberVault system accounts and service identities</p>
+                </div>
+                <div>
+                    <button class="btn btn-ghost" onclick="exportUsers()">⬇ Export CSV</button>
+                </div>
+            </div>
+
+            <!-- User Stats Row -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); margin-bottom:20px;">
+                <div class="stat-card green">
+                    <div class="stat-label">Active Users</div>
+                    <div class="stat-value" style="color:var(--accent-green); font-size:1.4rem;" id="u-stat-active">5</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Accounts</div>
+                    <div class="stat-value" style="font-size:1.4rem;">7</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-label">Compromised</div>
+                    <div class="stat-value" style="color:#f87171; font-size:1.4rem;">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Inactive</div>
+                    <div class="stat-value" style="color:var(--text-secondary); font-size:1.4rem;">1</div>
+                </div>
+            </div>
+
+            <!-- Warning: Compromised Account -->
+            <div class="alert-box alert-warning" style="margin-bottom:16px;">
+                <span>🔴</span>
+                <div>
+                    <strong>Security Alert:</strong> Account <code>svc_backup</code> (service_account) has been marked as <strong>Compromised</strong>. Credentials were leaked via the <code>x-debug-flag</code> header in the forensic log trail. Immediate credential rotation recommended.
+                </div>
+            </div>
+
+            <!-- User Table Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span class="icon">👥</span> System Accounts</div>
+                    <div class="toolbar">
+                        <input type="text" class="search-box" id="user-search" placeholder="Search name, username, email…" oninput="filterUsers()" style="width:220px; flex:none;">
+                        <button class="filter-btn active" onclick="filterUserStatus('all', this)">All</button>
+                        <button class="filter-btn" onclick="filterUserStatus('Active', this)">Active</button>
+                        <button class="filter-btn" onclick="filterUserStatus('Inactive', this)">Inactive</button>
+                        <button class="filter-btn" onclick="filterUserStatus('Compromised', this)">⚠ Compromised</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="user-table">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;">#</th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th style="text-align:center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="padding:12px 20px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.75rem; color:var(--text-muted);" id="user-count-label">Showing 7 of 7 accounts</span>
+                    <span style="font-size:0.72rem; font-family:'Fira Code',monospace; color:var(--text-muted);">Source: cybervault.db · users table</span>
+                </div>
+            </div>
+
+        </div>
+        <!-- END USERS -->
+
+
+        <!-- ═══════════════════════════════════════════ PAGE: LOGS ══ -->
+        <div class="page-panel" id="page-logs">
+
+            <div class="section-header">
+                <div class="section-header-left">
+                    <span class="page-badge">DFIR // Log Analysis</span>
+                    <h1>Access Log Trail Investigation</h1>
+                    <p>Forensic timeline analysis of <code>audit_access.log</code></p>
+                </div>
+                <a href="/api/logs/raw" download="audit_access.log" class="btn btn-ghost">⬇ Download Raw Log</a>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); margin-bottom:20px;">
+                <div class="stat-card">
+                    <div class="stat-label">Total Events</div>
+                    <div class="stat-value" id="log-total">{{ total_lines }}</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-label">401 Failures</div>
+                    <div class="stat-value" style="color:#f87171">{{ failed_count }}</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-label">Attacker IP</div>
+                    <div class="stat-value" style="color:var(--accent-amber); font-size:1rem;">{{ attacker_ip }}</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Breakthrough</div>
+                    <div class="stat-value" style="color:var(--accent-green); font-size:1rem;">200 OK</div>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-header" style="padding:14px 20px;">
+                    <input type="text" id="logSearch" class="search-box" placeholder="Search logs — IP, endpoint, HTTP code, flag pattern…" oninput="filterLogs()" style="max-width:500px;">
+                </div>
+                <div class="quick-filters">
+                    <span class="qf-label">Quick Filters:</span>
+                    <button class="filter-btn active" onclick="setFilter('', this)">All Events</button>
+                    <button class="filter-btn" onclick="setFilter('401', this)">401 Failures</button>
+                    <button class="filter-btn" onclick="setFilter('198.51.100.42', this)">Attacker IP</button>
+                    <button class="filter-btn" onclick="setFilter('200 14820', this)">Breakthrough 200</button>
+                    <button class="filter-btn" onclick="setFilter('x-debug-flag', this)">Leaked Debug Header</button>
+                    <button class="filter-btn" onclick="setFilter('POST /admin', this)">POST /admin</button>
+                </div>
+            </div>
+
+            <!-- Log Terminal -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span class="icon">🖥</span> audit_access.log</div>
+                    <span style="font-size:0.72rem; color:var(--text-muted); font-family:'Fira Code',monospace;" id="log-visible-count">{{ total_lines }} lines</span>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="log-terminal" id="logContainer">
+                        {% for line in log_lines %}
+                        <div class="log-line {% if 'x-debug-flag' in line %}highlight-breakthrough{% elif ' 401 ' in line %}status-401{% elif ' 200 ' in line %}status-200{% elif ' 404 ' in line %}status-404{% endif %}">{{ line }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- END LOGS -->
+
+
+        <!-- ════════════════════════════════════ PAGE: SUBMIT FLAG ══ -->
+        <div class="page-panel" id="page-flag">
+
+            <div class="section-header">
+                <div class="section-header-left">
+                    <span class="page-badge">Stage 5 // Flag Submission</span>
+                    <h1>🎯 Submit Extracted Flag</h1>
+                    <p>Locate the <code>x-debug-flag</code> header in the breakthrough log entry and submit the flag value below</p>
+                </div>
+            </div>
+
+            <div class="alert-box alert-info" style="margin-bottom:20px;">
+                <span>💡</span>
+                <div>Go to <strong>Logs</strong> → Quick Filter <strong>"Leaked Debug Header"</strong> → find the green highlighted line → copy the <code>CVT{...}</code> value.</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title"><span class="icon">🔐</span> Flag Validation</div>
+                </div>
+                <div class="card-body">
+                    <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:16px;">
+                        Enter the flag extracted from the forensic <code>x-debug-flag</code> header in the attacker's final 200 OK request:
+                    </p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="flagInput" class="flag-input" placeholder="CVT{...}" value="">
+                        <button class="btn btn-green" onclick="submitFlag()">✔ Validate Flag</button>
+                    </div>
+                    <div id="resultBox" class="result-box"></div>
+
+                    <div style="margin-top:20px; padding:12px 14px; background:rgba(15,23,42,0.6); border:1px solid var(--border); border-radius:8px; text-align:center; font-size:0.8rem; color:var(--text-secondary);">
+                        🎯 Score your flag on the central
+                        <a href="http://localhost:5000" target="_blank" style="color:var(--accent-cyan); text-decoration:none; font-weight:600;">CyberVault Scoring Portal →</a>
+                    </div>
+                </div>
+            </div>
+
+            <details style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; font-size:0.83rem; color:var(--text-secondary); margin-top:8px;">
+                <summary style="cursor:pointer; font-weight:600; color:var(--accent-cyan);">📖 Forensic Analysis Methodology</summary>
+                <div style="margin-top:12px; line-height:1.8;">
+                    <strong style="color:var(--text-primary);">1. Anomaly Detection:</strong> Filter HTTP 401 events → identify attacker IP with highest failure count.<br>
+                    <strong style="color:var(--text-primary);">2. Timeline Reconstruction:</strong> Trace all events from <code>198.51.100.42</code> chronologically.<br>
+                    <strong style="color:var(--text-primary);">3. Breakthrough Event:</strong> Locate the single 200 OK response with body size 14820.<br>
+                    <strong style="color:var(--text-primary);">4. Artifact Extraction:</strong> Read the <code>x-debug-flag</code> response header and associated AUDIT_NOTE for SSH pivot credentials.
+                </div>
+            </details>
+
+        </div>
+        <!-- END FLAG -->
+
+    </div><!-- /page-scroll -->
+</div><!-- /main-wrapper -->
+
+<!-- ═══════════════════════════════════════════════════════════ SCRIPTS ══ -->
+<script>
+    /* ── User Data ──────────────────────────────────────────────────────── */
+    const USERS = [
+        { id:1, username:"admin",          full_name:"Root Custodian Admin",       email:"secops@cybervaulttech.com",      role:"vault_administrator",  status:"Active",      last_login:"2026-10-08 01:30:12" },
+        { id:2, username:"operator_dave",  full_name:"Dave Mitchell",             email:"dave@cybervaulttech.com",         role:"vault_operator",        status:"Active",      last_login:"2026-10-07 18:22:05" },
+        { id:3, username:"auditor_alice",  full_name:"Alice Henderson",           email:"alice@cybervaulttech.com",        role:"compliance_auditor",    status:"Active",      last_login:"2026-10-06 09:44:33" },
+        { id:4, username:"svc_backup",     full_name:"Backup Automation Service", email:"svc_backup@cybervaulttech.com",   role:"service_account",       status:"Compromised", last_login:"2026-10-08 02:12:55" },
+        { id:5, username:"j.fernandez",    full_name:"Juan Fernandez",            email:"juan@cybervaulttech.com",         role:"vault_operator",        status:"Inactive",    last_login:"2026-09-30 14:10:00" },
+        { id:6, username:"m.chen",         full_name:"Michelle Chen",             email:"mchen@cybervaulttech.com",        role:"compliance_auditor",    status:"Active",      last_login:"2026-10-09 08:55:19" },
+        { id:7, username:"r.patel",        full_name:"Raj Patel",                 email:"raj@cybervaulttech.com",          role:"vault_operator",        status:"Active",      last_login:"2026-10-08 11:30:41" },
+    ];
+
+    const AVATAR_COLORS = [
+        ['#00d4ff','#8b5cf6'], ['#f59e0b','#ef4444'], ['#10b981','#3b82f6'],
+        ['#ef4444','#f59e0b'], ['#94a3b8','#475569'], ['#8b5cf6','#ec4899'], ['#3b82f6','#10b981']
+    ];
+
+    const ROLE_LABELS = {
+        vault_administrator: '⭐ Admin',
+        vault_operator:      '🔧 Operator',
+        compliance_auditor:  '📋 Auditor',
+        service_account:     '⚙ Service',
+    };
+
+    let currentStatusFilter = 'all';
+
+    function initials(name) {
+        return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    }
+
+    function renderUsers(list) {
+        const tbody = document.getElementById('user-tbody');
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">No accounts match your filter.</td></tr>`;
+            document.getElementById('user-count-label').textContent = 'Showing 0 of ' + USERS.length + ' accounts';
+            return;
+        }
+
+        tbody.innerHTML = list.map((u, i) => {
+            const [a, b] = AVATAR_COLORS[(u.id - 1) % AVATAR_COLORS.length];
+            const roleLabel = ROLE_LABELS[u.role] || u.role;
+            return `
+            <tr data-status="${u.status}" data-search="${(u.full_name + u.username + u.email + u.role).toLowerCase()}">
+                <td style="color:var(--text-muted); font-family:'Fira Code',monospace; font-size:0.75rem;">${u.id}</td>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar" style="--avatar-a:${a}; --avatar-b:${b};">${initials(u.full_name)}</div>
+                        <div>
+                            <div class="user-name">${u.full_name}</div>
+                            <div class="user-username">@${u.username}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="email-cell">${u.email}</td>
+                <td><span class="role-badge role-${u.role}">${roleLabel}</span></td>
+                <td><span class="status-badge status-${u.status}"><span class="status-dot-sm"></span>${u.status}</span></td>
+                <td class="time-cell">${u.last_login}</td>
+                <td>
+                    <div class="action-btns" style="justify-content:center;">
+                        <button class="action-btn" title="View user">👁</button>
+                        <button class="action-btn" title="Edit user">✏</button>
+                        ${u.status === 'Compromised' ? '<button class="action-btn" title="Reset credentials" style="color:#f87171;">🔑</button>' : ''}
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('user-count-label').textContent = `Showing ${list.length} of ${USERS.length} accounts`;
+    }
+
+    function filterUsers() {
+        const q = document.getElementById('user-search').value.toLowerCase();
+        let filtered = USERS;
+        if (currentStatusFilter !== 'all') filtered = filtered.filter(u => u.status === currentStatusFilter);
+        if (q) filtered = filtered.filter(u => (u.full_name + u.username + u.email + u.role).toLowerCase().includes(q));
+        renderUsers(filtered);
+    }
+
+    function filterUserStatus(status, btn) {
+        currentStatusFilter = status;
+        document.querySelectorAll('#page-users .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterUsers();
+    }
+
+    function exportUsers() {
+        const header = 'ID,Username,Full Name,Email,Role,Status,Last Login\n';
+        const rows = USERS.map(u => `${u.id},${u.username},"${u.full_name}",${u.email},${u.role},${u.status},${u.last_login}`).join('\n');
+        const blob = new Blob([header + rows], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'cybervault_users.csv'; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /* ── Navigation ─────────────────────────────────────────────────────── */
+    const PAGES = ['dashboard', 'users', 'logs', 'flag'];
+    const PAGE_TITLES = {
+        dashboard: 'Dashboard <span>/ Overview</span>',
+        users:     'Users <span>/ Account Management</span>',
+        logs:      'Logs <span>/ Forensic Analysis</span>',
+        flag:      'Submit Flag <span>/ Stage 5</span>',
+    };
+
+    function navigateTo(page) {
+        PAGES.forEach(p => {
+            document.getElementById('page-' + p).classList.remove('active');
+            const nav = document.getElementById('nav-' + p);
+            if (nav) nav.classList.remove('active');
+        });
+        document.getElementById('page-' + page).classList.add('active');
+        const nav = document.getElementById('nav-' + page);
+        if (nav) nav.classList.add('active');
+        document.getElementById('topbar-title').innerHTML = PAGE_TITLES[page] || page;
+
+        if (page === 'users') renderUsers(USERS);
+    }
+
+    /* ── Log Filtering ──────────────────────────────────────────────────── */
+    function filterLogs() {
+        const q = document.getElementById('logSearch').value.toLowerCase();
+        const lines = document.querySelectorAll('#logContainer .log-line');
+        let visible = 0;
+        lines.forEach(line => {
+            const match = line.textContent.toLowerCase().includes(q);
+            line.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        document.getElementById('log-visible-count').textContent = visible + ' lines';
+    }
+
+    function setFilter(term, btn) {
+        document.getElementById('logSearch').value = term;
+        document.querySelectorAll('#page-logs .filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        filterLogs();
+    }
+
+    /* ── Flag Submission ────────────────────────────────────────────────── */
+    function submitFlag() {
+        const flag = document.getElementById('flagInput').value.trim();
+        const resBox = document.getElementById('resultBox');
+
+        if (!flag) { resBox.className = 'result-box result-fail'; resBox.textContent = '[-] Please enter a flag value.'; return; }
+
+        fetch('/api/validate-flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ flag })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.valid) {
+                resBox.className = 'result-box result-success';
+                resBox.innerHTML = `
+                    <strong>✓ STAGE 5 COMPLETED SUCCESSFULLY!</strong><br>
+                    Flag accepted: <code>${flag}</code><br><br>
+                    <strong>[>] PIVOT EVIDENCE FOR STAGE 6:</strong><br>
+                    Target Host: <code>10.0.6.10:2222</code><br>
+                    Service Account: <code>svc_backup</code><br>
+                    Password: <code>ShadowBackup#2026!</code><br><br>
+                    <a href="${data.stage6_info?.url || 'http://localhost:5006'}" style="color:#00f2fe; text-decoration:underline; font-weight:bold;">
+                        Proceed to Stage 6: Capstone Privilege Escalation →
+                    </a>`;
+            } else {
+                resBox.className = 'result-box result-fail';
+                resBox.innerHTML = `<strong>[-] Flag Validation Failed:</strong> Incorrect flag. Check the 200 OK log entry for the <code>x-debug-flag</code> value.`;
+            }
+        })
+        .catch(() => {
+            resBox.className = 'result-box result-fail';
+            resBox.textContent = 'Network error during validation.';
+        });
+    }
+
+    /* ── Init ───────────────────────────────────────────────────────────── */
+    renderUsers(USERS);
+</script>
+</body>
+</html>
