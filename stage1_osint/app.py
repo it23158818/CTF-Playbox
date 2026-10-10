@@ -636,9 +636,31 @@ Disallow: /staging-enclave/
 # Flask Application Routes (WSGI / Vercel Serverless Ready)
 # ============================================================================
 
-@app.route("/")
-@app.route("/careers")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/careers", methods=["GET", "POST"])
+@app.route("/api/index", methods=["GET", "POST"])
+@app.route("/api/index.py", methods=["GET", "POST"])
 def careers():
+    # Dispatch when Vercel rewrites requests to /api/index?path=...
+    target_path = request.args.get("path", "").strip()
+    if target_path:
+        clean_path = target_path.rstrip("/") if target_path != "/" else "/"
+        if not clean_path.startswith("/"):
+            clean_path = "/" + clean_path
+
+        if clean_path in ("/social",):
+            return social()
+        elif clean_path in ("/robots.txt",):
+            return robots()
+        elif clean_path in ("/api/status",):
+            return api_status()
+        elif clean_path in ("/api/verify",):
+            return api_verify()
+        elif clean_path in ("/", "/careers"):
+            pass
+        else:
+            return Response("404 Not Found", status=404, mimetype="text/plain")
+
     try:
         content = render_template("careers.html")
     except Exception:
@@ -646,6 +668,7 @@ def careers():
     resp = Response(content, mimetype="text/html; charset=utf-8")
     resp.headers["X-Challenge-Stage"] = "1-OSINT-Recon"
     return resp
+
 
 @app.route("/social")
 def social():
