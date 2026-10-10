@@ -10,9 +10,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from capstone_server import app
+from capstone_server import app as flask_app
+
+try:
+    from api.index import VercelPathMiddleware
+    app = VercelPathMiddleware(flask_app)
+except Exception:
+    app = flask_app
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5006))
     print(f"[*] Starting CyberVault Stage 6 Capstone Service on port {port}...")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    flask_app.run(host="0.0.0.0", port=port, debug=False)

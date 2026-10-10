@@ -111,14 +111,34 @@ def simulate_terminal(cmd):
             "is_flag": False
         }
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
+@app.route("/api/index", methods=["GET", "POST"])
+@app.route("/api/index.py", methods=["GET", "POST"])
 def index():
+    # Dispatch when Vercel rewrites requests to /api/index?path=...
+    target_path = request.args.get("path", "").strip()
+    if target_path:
+        clean_path = target_path.rstrip("/") if target_path != "/" else "/"
+        if not clean_path.startswith("/"):
+            clean_path = "/" + clean_path
+
+        if clean_path in ("/api/exec", "/api/exec/"):
+            return exec_cmd()
+        elif clean_path in ("/health", "/health/"):
+            return health()
+        elif clean_path in ("/reset", "/reset/"):
+            return reset()
+        elif clean_path in ("/", ""):
+            return render_template("terminal.html")
+
     return render_template("terminal.html")
 
-@app.route("/api/exec", methods=["POST"])
+@app.route("/api/exec", methods=["GET", "POST"])
 def exec_cmd():
+    if request.method == "GET":
+        return jsonify({"error": "POST method required with JSON {'command': '...'}"}), 405
     data = request.get_json(silent=True) or request.form
-    command = data.get("command", "").strip()
+    command = data.get("command", "").strip() if data else ""
     result = simulate_terminal(command)
     return jsonify(result), 200
 
@@ -126,7 +146,7 @@ def exec_cmd():
 def health():
     return jsonify({"status": "healthy", "stage": "Stage 6 - System Security Capstone"}), 200
 
-@app.route("/reset", methods=["POST"])
+@app.route("/reset", methods=["GET", "POST"])
 def reset():
     return jsonify({"status": "reset_complete", "message": "Stage 6 restored to pristine state."}), 200
 
