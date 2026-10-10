@@ -222,6 +222,16 @@
             margin-bottom: 0.35rem;
         }
 
+        code {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
         .internal-notice {
             background: rgba(15, 23, 42, 0.8);
             border-left: 4px solid var(--accent-cyan);
@@ -316,20 +326,21 @@
                 </div>
             </div>
             <p class="job-desc">
-                We are seeking a senior infrastructure engineer to oversee deployment automation, zero-trust network
-                policy, and container orchestration across our hybrid cloud environment.
+                We are looking for a Senior DevOps & Cloud Enclave Engineer to help us expand our next-generation secure cloud platform.
+                You will work closely with our security and platform teams to build and maintain isolated environments for development,
+                testing, and deployment.
             </p>
             <ul class="requirements-list">
-                <li>5+ years managing Linux infrastructure, Docker Compose, and Kubernetes enclaves.</li>
-                <li>Deep understanding of SSH bastion architecture, network micro-segmentation, and TLS termination.
-                </li>
-                <li>Experience configuring automated key rotation services and hardened backup environments.</li>
+                <li>5+ years of experience with Linux, Docker, and Kubernetes in secure environments.</li>
+                <li>Strong knowledge of network segmentation, zero-trust architectures, and TLS termination.</li>
+                <li>Experience setting up and managing staging environments for new services.</li>
             </ul>
+            <p class="job-desc">
+                As part of our infrastructure expansion, we are currently setting up a new staging environment for our internal vault services.<br>
+                Engineers will be working with the staging server under our company domain: <code>cybervaulttech.com</code>
+            </p>
             <div class="internal-notice">
-                <strong>[DevOps Notice - Sprint 42]:</strong> All pipeline deployments are transitioning away from
-                legacy nodes. Do <strong>NOT</strong> attempt to push builds to the decommissioned
-                <code>vault-legacy-01</code> node. All active testing is strictly provisioned on the dedicated staging
-                host: <code>vault-staging.cybervaulttech.com</code>.
+                <strong>[DevOps Notice - Sprint 42]:</strong> The staging environment is now live. Please use the use the staging server for all testing and validation before deploying to production. Do not push any builds directly to the production vault. Access and testing should be done via the specified staging hostname only.
             </div>
         </div>
 
