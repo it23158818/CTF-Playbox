@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Careers & Opportunities | CyberVault Technologies</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0a0e17;
@@ -20,17 +23,24 @@
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
         }
+
         header {
             border-bottom: 1px solid var(--border-color);
             background: rgba(10, 14, 23, 0.8);
@@ -39,6 +49,7 @@
             top: 0;
             z-index: 50;
         }
+
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -47,6 +58,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .brand {
             display: flex;
             align-items: center;
@@ -57,6 +69,7 @@
             color: #fff;
             text-decoration: none;
         }
+
         .brand-badge {
             background: linear-gradient(135deg, #0284c7, #2563eb);
             padding: 0.35rem 0.65rem;
@@ -65,6 +78,7 @@
             font-weight: 600;
             box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
         }
+
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
@@ -73,9 +87,12 @@
             font-weight: 500;
             transition: color 0.2s;
         }
-        nav a:hover, nav a.active {
+
+        nav a:hover,
+        nav a.active {
             color: var(--accent-cyan);
         }
+
         nav .btn-login {
             background: linear-gradient(135deg, #0284c7, #2563eb);
             color: #ffffff !important;
@@ -89,18 +106,21 @@
             align-items: center;
             justify-content: center;
         }
+
         nav .btn-login:hover {
             background: linear-gradient(135deg, #0369a1, #1d4ed8);
             box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
             transform: translateY(-1px);
             color: #ffffff !important;
         }
+
         .hero {
             max-width: 1200px;
             margin: 3rem auto 2rem;
             padding: 0 2rem;
             text-align: center;
         }
+
         .badge {
             display: inline-block;
             padding: 0.35rem 1rem;
@@ -114,6 +134,7 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
         }
+
         h1 {
             font-size: 2.75rem;
             font-weight: 800;
@@ -123,12 +144,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .subtitle {
             color: var(--text-secondary);
             font-size: 1.15rem;
             max-width: 650px;
             margin: 0 auto;
         }
+
         .content {
             max-width: 1100px;
             margin: 2.5rem auto 4rem;
@@ -137,19 +160,22 @@
             flex-direction: column;
             gap: 1.5rem;
         }
+
         .job-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.75rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             transition: transform 0.2s, border-color 0.2s;
         }
+
         .job-card:hover {
             border-color: var(--border-hover);
             transform: translateY(-2px);
         }
+
         .job-header {
             display: flex;
             justify-content: space-between;
@@ -158,35 +184,44 @@
             flex-wrap: wrap;
             gap: 0.5rem;
         }
+
         .job-title {
             font-size: 1.35rem;
             font-weight: 700;
             color: #fff;
         }
+
         .job-meta {
             display: flex;
             gap: 0.75rem;
             font-size: 0.85rem;
         }
+
         .meta-tag {
             background: rgba(255, 255, 255, 0.05);
             padding: 0.25rem 0.65rem;
             border-radius: 6px;
             color: var(--text-secondary);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
         .job-desc {
             color: var(--text-secondary);
             font-size: 0.95rem;
             margin-bottom: 1.25rem;
         }
+
         .requirements-list {
             margin-left: 1.25rem;
             color: var(--text-secondary);
             font-size: 0.9rem;
             margin-bottom: 1.25rem;
         }
-        .requirements-list li { margin-bottom: 0.35rem; }
+
+        .requirements-list li {
+            margin-bottom: 0.35rem;
+        }
+
         .internal-notice {
             background: rgba(15, 23, 42, 0.8);
             border-left: 4px solid var(--accent-cyan);
@@ -197,9 +232,11 @@
             font-family: 'JetBrains Mono', monospace;
             margin-top: 1rem;
         }
+
         .internal-notice strong {
             color: var(--accent-cyan);
         }
+
         .hint-box {
             background: rgba(16, 185, 129, 0.08);
             border: 1px solid rgba(16, 185, 129, 0.25);
@@ -211,10 +248,12 @@
             justify-content: space-between;
             gap: 1rem;
         }
+
         .hint-box p {
             color: #a7f3d0;
             font-size: 0.9rem;
         }
+
         .btn-inspect {
             background: linear-gradient(135deg, #0284c7, #0284c7);
             color: #fff;
@@ -228,18 +267,21 @@
             transition: opacity 0.2s;
             white-space: nowrap;
         }
-        .btn-inspect:hover { opacity: 0.9; }
+
+        .btn-inspect:hover {
+            opacity: 0.9;
+        }
+
         footer {
             border-top: 1px solid var(--border-color);
             padding: 2rem;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.85rem;
-            max-width: 1200px;
-            margin: 0 auto;
+            font-size: 0.875rem;
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="nav-container">
@@ -258,7 +300,8 @@
     <div class="hero">
         <span class="badge">Open Roles &bull; Join the Shield</span>
         <h1>Building the Future of Digital Custody</h1>
-        <p class="subtitle">CyberVault Technologies safeguards billions in tier-1 institutional digital assets across distributed high-availability enclaves.</p>
+        <p class="subtitle">CyberVault Technologies safeguards billions in tier-1 institutional digital assets across
+            distributed high-availability enclaves.</p>
     </div>
 
     <div class="content">
@@ -273,15 +316,20 @@
                 </div>
             </div>
             <p class="job-desc">
-                We are seeking a senior infrastructure engineer to oversee deployment automation, zero-trust network policy, and container orchestration across our hybrid cloud environment.
+                We are seeking a senior infrastructure engineer to oversee deployment automation, zero-trust network
+                policy, and container orchestration across our hybrid cloud environment.
             </p>
             <ul class="requirements-list">
                 <li>5+ years managing Linux infrastructure, Docker Compose, and Kubernetes enclaves.</li>
-                <li>Deep understanding of SSH bastion architecture, network micro-segmentation, and TLS termination.</li>
+                <li>Deep understanding of SSH bastion architecture, network micro-segmentation, and TLS termination.
+                </li>
                 <li>Experience configuring automated key rotation services and hardened backup environments.</li>
             </ul>
             <div class="internal-notice">
-                <strong>[DevOps Notice - Sprint 42]:</strong> All pipeline deployments are transitioning away from legacy nodes. Do <strong>NOT</strong> attempt to push builds to the decommissioned <code>vault-legacy-01</code> node. All active testing is strictly provisioned on the dedicated staging host: <code>vault-staging.cybervaulttech.com</code>.
+                <strong>[DevOps Notice - Sprint 42]:</strong> All pipeline deployments are transitioning away from
+                legacy nodes. Do <strong>NOT</strong> attempt to push builds to the decommissioned
+                <code>vault-legacy-01</code> node. All active testing is strictly provisioned on the dedicated staging
+                host: <code>vault-staging.cybervaulttech.com</code>.
             </div>
         </div>
 
@@ -296,11 +344,13 @@
                 </div>
             </div>
             <p class="job-desc">
-                Lead the architecture of our multi-party computation (MPC) key shards and quantum-resistant cold storage isolation layers.
+                Lead the architecture of our multi-party computation (MPC) key shards and quantum-resistant cold storage
+                isolation layers.
             </p>
             <ul class="requirements-list">
                 <li>Strong mathematical grounding in modern symmetric ciphers and public-key infrastructure.</li>
-                <li>Experience analyzing cryptographic failure modes, cipher rotation procedures, and metadata leakage vectors.</li>
+                <li>Experience analyzing cryptographic failure modes, cipher rotation procedures, and metadata leakage
+                    vectors.</li>
             </ul>
         </div>
 
@@ -315,7 +365,8 @@
                 </div>
             </div>
             <p class="job-desc">
-                Audit our customer-facing asset portals, APIs, and authentication endpoints against OWASP Top 10 vulnerabilities (SQLi, Auth Bypass, IDOR).
+                Audit our customer-facing asset portals, APIs, and authentication endpoints against OWASP Top 10
+                vulnerabilities (SQLi, Auth Bypass, IDOR).
             </p>
             <ul class="requirements-list">
                 <li>Hands-on penetration testing experience across web applications and identity gateways.</li>
@@ -328,4 +379,5 @@
         &copy; 2026 CyberVault Technologies Inc. All rights reserved.
     </footer>
 </body>
+
 </html>

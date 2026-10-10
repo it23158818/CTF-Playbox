@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Developer Updates | CyberVault Technologies</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0a0e17;
@@ -18,17 +21,24 @@
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
         }
+
         header {
             border-bottom: 1px solid var(--border-color);
             background: rgba(10, 14, 23, 0.8);
@@ -37,6 +47,7 @@
             top: 0;
             z-index: 50;
         }
+
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -45,6 +56,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .brand {
             display: flex;
             align-items: center;
@@ -54,6 +66,7 @@
             color: #fff;
             text-decoration: none;
         }
+
         .brand-badge {
             background: linear-gradient(135deg, #0284c7, #2563eb);
             padding: 0.35rem 0.65rem;
@@ -61,6 +74,7 @@
             font-size: 0.8rem;
             font-weight: 600;
         }
+
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
@@ -68,7 +82,12 @@
             font-size: 0.95rem;
             font-weight: 500;
         }
-        nav a:hover, nav a.active { color: var(--accent-cyan); }
+
+        nav a:hover,
+        nav a.active {
+            color: var(--accent-cyan);
+        }
+
         nav .btn-login {
             background: linear-gradient(135deg, #0284c7, #2563eb);
             color: #ffffff !important;
@@ -82,12 +101,14 @@
             align-items: center;
             justify-content: center;
         }
+
         nav .btn-login:hover {
             background: linear-gradient(135deg, #0369a1, #1d4ed8);
             box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
             transform: translateY(-1px);
             color: #ffffff !important;
         }
+
         .feed-container {
             max-width: 720px;
             margin: 3rem auto;
@@ -96,27 +117,32 @@
             flex-direction: column;
             gap: 1.5rem;
         }
+
         .feed-header {
             text-align: center;
             margin-bottom: 1rem;
         }
+
         .feed-header h1 {
             font-size: 2rem;
             font-weight: 800;
         }
+
         .post-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
+
         .post-author {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             margin-bottom: 0.75rem;
         }
+
         .avatar {
             width: 44px;
             height: 44px;
@@ -128,13 +154,23 @@
             font-weight: 700;
             color: #fff;
         }
-        .author-details h4 { font-size: 1rem; color: #fff; }
-        .author-details span { font-size: 0.8rem; color: var(--text-muted); }
+
+        .author-details h4 {
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .author-details span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
         .post-body {
             color: #e2e8f0;
             font-size: 0.95rem;
             margin-bottom: 1rem;
         }
+
         .highlight {
             background: rgba(56, 189, 248, 0.15);
             color: var(--accent-cyan);
@@ -142,12 +178,14 @@
             border-radius: 4px;
             font-family: 'JetBrains Mono', monospace;
         }
+
         .post-tags {
             display: flex;
             gap: 0.5rem;
             font-size: 0.8rem;
             color: var(--accent-blue);
         }
+
         .post-image-container {
             margin: 1rem 0;
             border-radius: 8px;
@@ -156,86 +194,24 @@
             background: #030712;
             text-align: center;
         }
+
         .post-image {
             max-width: 100%;
             max-height: 460px;
             height: auto;
             display: inline-block;
             border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             transition: transform 0.25s ease;
         }
+
         .post-image:hover {
             transform: scale(1.015);
         }
-        .verify-box {
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-        }
-        .verify-box h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: var(--accent-cyan);
-        }
-        .verify-box p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-        .form-row {
-            display: flex;
-            gap: 0.5rem;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 0.7rem 1rem;
-            background: #030712;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-cyan);
-        }
-        button {
-            padding: 0.7rem 1.4rem;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            border: none;
-            border-radius: 6px;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.9; }
-        .result {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            display: none;
-        }
-        .result.success {
-            display: block;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: #34d399;
-        }
-        .result.error {
-            display: block;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #f87171;
-        }
+
     </style>
 </head>
+
 <body>
     <header>
         <div class="nav-container">
@@ -254,7 +230,8 @@
     <div class="feed-container">
         <div class="feed-header">
             <h1>Engineering Social Stream</h1>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Real-time development updates from our engineering crew</p>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Real-time development updates from our
+                engineering crew</p>
         </div>
 
         <div class="post-card">
@@ -266,7 +243,10 @@
                 </div>
             </div>
             <div class="post-body">
-                Migration milestone accomplished! Decommissioned that pesky legacy cluster <span class="highlight">vault-legacy-01</span> for good this morning. All staging validation runs are now pointed squarely at <span class="highlight">vault-staging.cybervaulttech.com</span>! Huge props to the infrastructure team for zero downtime during cutover! 🚀🔐
+                Migration milestone accomplished! Decommissioned that pesky legacy cluster <span
+                    class="highlight">vault-legacy-01</span> for good this morning. All staging validation runs are now
+                pointed squarely at <span class="highlight">vault-staging.cybervaulttech.com</span>! Huge props to the
+                infrastructure team for zero downtime during cutover! 🚀🔐
             </div>
             <div class="post-tags">
                 <span>#DevOps</span>
@@ -285,10 +265,14 @@
                 </div>
             </div>
             <div class="post-body">
-                Fresh branding deployed for our internal staging diagnostics dashboard! 🏛️ In honor of our upcoming classic cryptography drills and key rotation protocols, we've set William Shakespeare's <em>Julius Caesar</em> as our updated staging asset. Remember team: <em>"Experience is the teacher of all things."</em> Keep your ciphers rotated and audit your asset metadata! 🔐📖
+                Fresh branding deployed for our internal staging diagnostics dashboard! 🏛️ In honor of our upcoming
+                classic cryptography drills and key rotation protocols, we've set William Shakespeare's <em>Julius
+                    Caesar</em> as our updated staging asset. Remember team: <em>"Experience is the teacher of all
+                    things."</em> Keep your ciphers rotated and audit your asset metadata! 🔐📖
             </div>
             <div class="post-image-container">
-                <img src="/static/julius_caesar.jpg" alt="William Shakespeare Julius Caesar - Staging Asset" class="post-image" />
+                <img src="/static/julius_caesar.jpg" alt="William Shakespeare Julius Caesar - Staging Asset"
+                    class="post-image" />
             </div>
             <div class="post-tags">
                 <span>#DevOps</span>
@@ -308,22 +292,13 @@
                 </div>
             </div>
             <div class="post-body">
-                Reminder for all staff: Passive reconnaissance assessments have kicked off. Ensure all metadata on public assets is sanitized before uploading to public repositories or CDNs. Stay vigilant!
+                Reminder for all staff: Passive reconnaissance assessments have kicked off. Ensure all metadata on
+                public assets is sanitized before uploading to public repositories or CDNs. Stay vigilant!
             </div>
             <div class="post-tags">
                 <span>#SecOps</span>
                 <span>#InformationSecurity</span>
             </div>
-        </div>
-
-        <div class="verify-box">
-            <h3>Target Validation Console</h3>
-            <p>Discovered the active staging infrastructure hostname from our social updates? Submit it below to obtain the Stage 1 clearance flag.</p>
-            <div class="form-row">
-                <input type="text" id="hostInput" placeholder="e.g. target-node.cybervaulttech.com" />
-                <button onclick="verifyHostname()">Submit Host</button>
-            </div>
-            <div id="resultBox" class="result"></div>
         </div>
     </div>
 

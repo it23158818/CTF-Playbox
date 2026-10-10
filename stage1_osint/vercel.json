@@ -1,6 +1,15 @@
 {
   "version": 2,
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "templates/**,static/**,public/**,cybervault.db,audit_access.log,generate_logs.py"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/api/index?path=/$1"

@@ -12,19 +12,67 @@ import urllib.parse
 import os
 import sqlite3
 import shutil
-from flask import Flask, render_template, request, jsonify, Response, send_from_directory
+from flask import Flask, render_template, request, jsonify, Response, send_from_directory, send_file
 
 PORT = int(os.environ.get("PORT", 8081))
 STAGE1_FLAG = os.environ.get("STAGE1_FLAG", "CVT{0s1nt_st4g1ng_l34k_8291}")
 STAGE2_URL = os.environ.get("STAGE2_URL", "http://localhost:8082")
 STAGE4_FLAG = os.environ.get("STAGE4_FLAG", "CVT{sql1_byp4ss_v4ult_4dm1n}")
+STAGE5_FLAG = os.environ.get("STAGE5_FLAG", "CVT{f0r3ns1c_l0g_tr41l_unv31l3d}")
+STAGE5_URL = os.environ.get("STAGE5_URL", "/forensics")
+ATTACKER_IP = "198.51.100.42"
 CORRECT_HOSTNAME = "vault-staging.cybervaulttech.com"
 DECOY_HOSTNAME = "vault-legacy-01"
+
+SYSTEM_USERS = [
+    {"id": 1, "username": "admin",          "full_name": "Root Custodian Admin",       "email": "secops@cybervaulttech.com",     "role": "vault_administrator",  "status": "Active",   "last_login": "2026-10-08 01:30:12"},
+    {"id": 2, "username": "operator_dave",  "full_name": "Dave Mitchell",             "email": "dave@cybervaulttech.com",      "role": "vault_operator",       "status": "Active",   "last_login": "2026-10-07 18:22:05"},
+    {"id": 3, "username": "auditor_alice",  "full_name": "Alice Henderson",           "email": "alice@cybervaulttech.com",     "role": "compliance_auditor",   "status": "Active",   "last_login": "2026-10-06 09:44:33"},
+    {"id": 4, "username": "svc_backup",     "full_name": "Backup Automation Service", "email": "svc_backup@cybervaulttech.com","role": "service_account",      "status": "Compromised","last_login": "2026-10-08 02:12:55"},
+    {"id": 5, "username": "j.fernandez",    "full_name": "Juan Fernandez",            "email": "juan@cybervaulttech.com",      "role": "vault_operator",       "status": "Inactive", "last_login": "2026-09-30 14:10:00"},
+    {"id": 6, "username": "m.chen",         "full_name": "Michelle Chen",             "email": "mchen@cybervaulttech.com",     "role": "compliance_auditor",   "status": "Active",   "last_login": "2026-10-09 08:55:19"},
+    {"id": 7, "username": "r.patel",        "full_name": "Raj Patel",                 "email": "raj@cybervaulttech.com",       "role": "vault_operator",       "status": "Active",   "last_login": "2026-10-08 11:30:41"},
+]
+
+STAGE6_SSH_INFO = {
+    "host": os.environ.get("STAGE6_HOST", "localhost"),
+    "port": int(os.environ.get("STAGE6_PORT", 2222)),
+    "user": "svc_backup",
+    "pass": "ShadowBackup#2026!",
+    "url": os.environ.get("STAGE6_WEB_URL", "http://localhost:5006")
+}
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR, static_url_path="/static")
+
+def get_stage5_log_path():
+    candidates = [
+        os.path.join(BASE_DIR, "audit_access.log"),
+        os.path.join(os.path.dirname(BASE_DIR), "stage5_access_logs", "audit_access.log"),
+        os.path.join("/tmp", "audit_access.log")
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return os.path.join("/tmp", "audit_access.log") if bool(os.environ.get("VERCEL")) else os.path.join(BASE_DIR, "audit_access.log")
+
+def read_stage5_logs():
+    log_path = get_stage5_log_path()
+    if not os.path.exists(log_path):
+        try:
+            from generate_logs import generate_log_file
+            generate_log_file()
+        except Exception:
+            pass
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            pass
+    return []
 
 # ============================================================================
 # Stage 4 SQL Injection Database Setup (Embedded in Stage 1)
@@ -344,9 +392,7 @@ CAREERS_HTML = """<!DOCTYPE html>
             padding: 2rem;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.85rem;
-            max-width: 1200px;
-            margin: 0 auto;
+            font-size: 0.875rem;
         }
     </style>
 </head>
@@ -431,7 +477,6 @@ CAREERS_HTML = """<!DOCTYPE html>
                 <li>Hands-on penetration testing experience across web applications and identity gateways.</li>
                 <li>Familiarity with SQL query parametrization and defensive audit logging trails.</li>
             </ul>
-        </div>
     </div>
 
     <footer>
@@ -611,72 +656,6 @@ SOCIAL_HTML = """<!DOCTYPE html>
         .post-image:hover {
             transform: scale(1.015);
         }
-        .verify-box {
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-        }
-        .verify-box h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: var(--accent-cyan);
-        }
-        .verify-box p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-        }
-        .form-row {
-            display: flex;
-            gap: 0.5rem;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 0.7rem 1rem;
-            background: #030712;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-cyan);
-        }
-        button {
-            padding: 0.7rem 1.4rem;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            border: none;
-            border-radius: 6px;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.9; }
-        .result {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            display: none;
-        }
-        .result.success {
-            display: block;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: #34d399;
-        }
-        .result.error {
-            display: block;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #f87171;
-        }
     </style>
 </head>
 <body>
@@ -757,16 +736,6 @@ SOCIAL_HTML = """<!DOCTYPE html>
                 <span>#SecOps</span>
                 <span>#InformationSecurity</span>
             </div>
-        </div>
-
-        <div class="verify-box">
-            <h3>Target Validation Console</h3>
-            <p>Discovered the active staging infrastructure hostname from our social updates? Submit it below to obtain the Stage 1 clearance flag.</p>
-            <div class="form-row">
-                <input type="text" id="hostInput" placeholder="e.g. target-node.cybervaulttech.com" />
-                <button onclick="verifyHostname()">Submit Host</button>
-            </div>
-            <div id="resultBox" class="result"></div>
         </div>
     </div>
 
@@ -1095,6 +1064,140 @@ LOGIN_HTML = """<!DOCTYPE html>
             transform: translateY(-1px);
             box-shadow: 0 6px 24px rgba(0, 242, 254, 0.55);
         }
+
+        /* ─── Caesar Bottom-Right Popup Message ──────────────────────────────── */
+        .caesar-popup {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 440px;
+            max-width: calc(100vw - 32px);
+            max-height: 520px;
+            background: rgba(10, 17, 34, 0.96);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 242, 254, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 242, 254, 0.18);
+            display: flex;
+            flex-direction: column;
+            z-index: 10001;
+            opacity: 0;
+            transform: translateY(30px) scale(0.96);
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .caesar-popup.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .caesar-popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(15, 26, 52, 0.9);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+        }
+
+        .caesar-sender-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .caesar-avatar {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 242, 254, 0.12);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 8px;
+        }
+
+        .caesar-sender-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caesar-sender-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #00f2fe;
+            font-family: 'Fira Code', monospace;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+        }
+
+        .caesar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caesar-btn-copy {
+            background: rgba(0, 242, 254, 0.12);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            color: #00f2fe;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .caesar-btn-copy:hover {
+            background: rgba(0, 242, 254, 0.22);
+            border-color: #00f2fe;
+            color: #ffffff;
+        }
+
+        .caesar-btn-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.2s ease;
+        }
+
+        .caesar-btn-close:hover {
+            color: #f87171;
+        }
+
+        .caesar-popup-body {
+            padding: 14px 16px;
+            overflow-y: auto;
+            max-height: 420px;
+        }
+
+        .caesar-memo-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.55;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: rgba(3, 7, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 0;
+            user-select: text;
+        }
     </style>
 </head>
 <body>
@@ -1157,12 +1260,85 @@ LOGIN_HTML = """<!DOCTYPE html>
         </div>
     </div>
 
+    <!-- Caesar Encrypted Memo Bottom-Right Popup (Shown after login) -->
+    <div id="caesarMemoPopup" class="caesar-popup" role="dialog" aria-live="polite">
+        <div class="caesar-popup-header">
+            <div class="caesar-sender-box">
+                <span class="caesar-avatar">🏛️</span>
+                <div class="caesar-sender-meta">
+                    <span class="caesar-sender-name">CAESAR</span>
+                </div>
+            </div>
+            <div class="caesar-actions">
+                <button type="button" class="caesar-btn-copy" id="caesarCopyBtn" title="Copy Memo Text" onclick="copyCaesarMemo()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy
+                </button>
+                <button type="button" class="caesar-btn-close" title="Dismiss Message" onclick="dismissCaesarPopup()">&times;</button>
+            </div>
+        </div>
+        <div class="caesar-popup-body">
+            <pre class="caesar-memo-text" id="caesarMemoContent">Paxg ebyx zxml xgvkrimxw, cnlm KHMtmx rhnk ikhuexfl tptr. By max xqiehbm ytbel, vtee bm t yxtmnkx tgw mkr tztbg. Kxfxfuxk, kxte atvdxkl gxoxk zbox ni, maxr cnlm Zhhzex atkwxk.
+
+VOM{v43l4k_la1ym_d3r_k0m4m10g_9173}</pre>
+        </div>
+    </div>
+
     <script>
+        function showCaesarPopup() {
+            setTimeout(function() {
+                const popup = document.getElementById('caesarMemoPopup');
+                if (popup) {
+                    popup.classList.add('show');
+                }
+            }, 300);
+        }
+
+        function dismissCaesarPopup() {
+            const popup = document.getElementById('caesarMemoPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
+        }
+
+        function copyCaesarMemo() {
+            const memo = document.getElementById('caesarMemoContent');
+            if (!memo) return;
+            const text = memo.innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = document.getElementById('caesarCopyBtn');
+                if (btn) {
+                    const original = btn.innerHTML;
+                    btn.innerHTML = '✓ Copied!';
+                    btn.style.color = '#34d399';
+                    setTimeout(function() {
+                        btn.innerHTML = original;
+                        btn.style.color = '';
+                    }, 2000);
+                }
+            }).catch(function() {
+                const range = document.createRange();
+                range.selectNodeContents(memo);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            });
+        }
+
+        {% if flag %}
+        showCaesarPopup();
+        {% endif %}
+
         function closeFlagModal() {
             const modal = document.getElementById('flagModal');
             if (modal) {
                 modal.style.display = 'none';
             }
+            const nextUrl = window.STAGE5_TARGET_URL || '{{ stage5_url or "/forensics" }}';
+            window.location.href = nextUrl;
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -1200,7 +1376,11 @@ LOGIN_HTML = """<!DOCTYPE html>
                         document.getElementById('userIdentity').innerText = data.user;
                         document.getElementById('userRole').innerText = data.role || 'vault_administrator';
                     }
+                    if (data.next_url) {
+                        window.STAGE5_TARGET_URL = data.next_url;
+                    }
                     document.getElementById('flagModal').style.display = 'flex';
+                    showCaesarPopup();
                 } else {
                     errorText.innerText = data.error || 'Invalid credentials.';
                     errorMsg.style.display = 'block';
@@ -1253,6 +1433,25 @@ def careers():
             return api_status()
         elif clean_path in ("/api/verify",):
             return api_verify()
+        elif clean_path.startswith("/static/"):
+            filename = clean_path[len("/static/"):].lstrip("/")
+            return serve_static(filename)
+        elif clean_path in ("/julius_caesar.jpg",):
+            return serve_static("julius_caesar.jpg")
+        elif clean_path in ("/forensics", "/stage5", "/access-logs"):
+            return stage5_forensics_view()
+        elif clean_path in ("/api/logs/raw",):
+            return download_stage5_raw()
+        elif clean_path in ("/api/logs",):
+            return get_stage5_logs_json()
+        elif clean_path in ("/api/validate-flag",):
+            return validate_stage5_flag()
+        elif clean_path in ("/api/users",):
+            return get_stage5_users()
+        elif clean_path in ("/health",):
+            return stage5_health()
+        elif clean_path in ("/reset",):
+            return stage5_reset()
         elif clean_path in ("/", "/careers"):
             pass
         else:
@@ -1322,7 +1521,8 @@ def login():
                         "message": "Authentication successful via SQL injection bypass!",
                         "user": user["username"],
                         "role": user["role"],
-                        "flag": STAGE4_FLAG
+                        "flag": STAGE4_FLAG,
+                        "next_url": STAGE5_URL
                     }), 200
             else:
                 error = "Invalid username or password. Access denied."
@@ -1337,7 +1537,7 @@ def login():
             conn.close()
 
     try:
-        content = render_template("login.html", error=error, flag=flag, user=authenticated_user)
+        content = render_template("login.html", error=error, flag=flag, user=authenticated_user, stage5_url=STAGE5_URL)
     except Exception:
         content = LOGIN_HTML
         if error:
@@ -1371,7 +1571,8 @@ def api_login():
                 "message": "Authentication successful via SQL injection bypass!",
                 "user": user["username"],
                 "role": user["role"],
-                "flag": STAGE4_FLAG
+                "flag": STAGE4_FLAG,
+                "next_url": STAGE5_URL
             }), 200
         else:
             return jsonify({"success": False, "error": "Invalid credentials"}), 401
@@ -1385,8 +1586,23 @@ def robots():
     return Response(ROBOTS_TXT, mimetype="text/plain; charset=utf-8")
 
 @app.route("/static/<path:filename>")
-def serve_static(filename):
-    return send_from_directory(STATIC_DIR, filename)
+@app.route("/julius_caesar.jpg")
+def serve_static(filename="julius_caesar.jpg"):
+    candidates = [
+        STATIC_DIR,
+        os.path.join(BASE_DIR, "public", "static"),
+        os.path.join(BASE_DIR, "public"),
+        os.path.join(os.getcwd(), "static"),
+        os.path.join(os.getcwd(), "public", "static"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"),
+    ]
+    for directory in candidates:
+        if os.path.isdir(directory):
+            target = os.path.join(directory, filename)
+            if os.path.isfile(target):
+                mimetype = "image/jpeg" if filename.lower().endswith((".jpg", ".jpeg")) else None
+                return send_from_directory(directory, filename, mimetype=mimetype)
+    return Response("404 Not Found", status=404, mimetype="text/plain")
 
 @app.route("/api/status")
 def api_status():
@@ -1421,6 +1637,73 @@ def api_verify():
         }
     return jsonify(res)
 
+# ============================================================================
+# Stage 5: Forensic Access Log Analysis (Embedded in Stage 1)
+# ============================================================================
+
+@app.route("/forensics")
+@app.route("/stage5")
+@app.route("/access-logs")
+def stage5_forensics_view():
+    lines = read_stage5_logs()
+    failed_401_count = sum(1 for line in lines if " 401 " in line and ATTACKER_IP in line)
+    return render_template(
+        "forensics.html",
+        log_lines=lines,
+        total_lines=len(lines),
+        failed_count=failed_401_count,
+        attacker_ip=ATTACKER_IP,
+        stage6_info=STAGE6_SSH_INFO,
+        port_label="Embedded Stage 5 Online"
+    )
+
+@app.route("/api/logs/raw")
+def download_stage5_raw():
+    log_path = get_stage5_log_path()
+    if os.path.exists(log_path):
+        return send_file(log_path, mimetype="text/plain", as_attachment=True, download_name="audit_access.log")
+    return Response("404 Log File Not Found", status=404, mimetype="text/plain")
+
+@app.route("/api/logs")
+def get_stage5_logs_json():
+    lines = read_stage5_logs()
+    return jsonify({
+        "total": len(lines),
+        "logs": lines
+    })
+
+@app.route("/api/validate-flag", methods=["POST"])
+def validate_stage5_flag():
+    data = request.get_json(silent=True) or request.form
+    user_flag = data.get("flag", "").strip()
+
+    if user_flag == STAGE5_FLAG:
+        return jsonify({
+            "valid": True,
+            "message": "Flag accepted! Access trail confirmed.",
+            "stage": 5,
+            "stage6_info": STAGE6_SSH_INFO
+        }), 200
+    else:
+        return jsonify({"valid": False, "message": "Invalid flag"}), 400
+
+@app.route("/api/users")
+def get_stage5_users():
+    return jsonify({"total": len(SYSTEM_USERS), "users": SYSTEM_USERS})
+
+@app.route("/health")
+def stage5_health():
+    return jsonify({"status": "healthy", "stage": "Stage 5 - Digital Forensics"}), 200
+
+@app.route("/reset", methods=["POST"])
+def stage5_reset():
+    try:
+        from generate_logs import generate_log_file
+        generate_log_file()
+    except Exception:
+        pass
+    return jsonify({"status": "reset_complete", "message": "Stage 5 log file regenerated to initial state."}), 200
+
 @app.errorhandler(404)
 def not_found(e):
     return Response("404 Not Found", status=404, mimetype="text/plain")
@@ -1444,6 +1727,23 @@ class Stage1Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("X-Challenge-Stage", "1-OSINT-Recon")
             self.end_headers()
             self.wfile.write(CAREERS_HTML.encode("utf-8"))
+
+        elif path in ["/forensics", "/stage5", "/access-logs"]:
+            forensics_path = os.path.join(TEMPLATE_DIR, "forensics.html")
+            if os.path.exists(forensics_path):
+                with open(forensics_path, "r", encoding="utf-8") as f:
+                    html_content = f.read()
+                lines = read_stage5_logs()
+                failed_401_count = sum(1 for line in lines if " 401 " in line and ATTACKER_IP in line)
+                html_content = html_content.replace("{{ total_lines }}", str(len(lines))).replace("{{ failed_count }}", str(failed_401_count))
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(html_content.encode("utf-8"))
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"404 Forensics Template Not Found")
 
         elif path == "/social":
             self.send_response(200)
@@ -1476,18 +1776,29 @@ class Stage1Handler(http.server.BaseHTTPRequestHandler):
                 "challenge": "The Careers Page Slip-Up"
             }).encode("utf-8"))
 
-        elif path.startswith("/static/"):
-            rel_name = path[len("/static/"):]
-            file_path = os.path.join(STATIC_DIR, rel_name)
-            if os.path.exists(file_path):
-                with open(file_path, "rb") as f:
-                    content = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "image/jpeg")
-                self.send_header("Content-Length", str(len(content)))
-                self.end_headers()
-                self.wfile.write(content)
-            else:
+        elif path.startswith("/static/") or path == "/julius_caesar.jpg":
+            rel_name = "julius_caesar.jpg" if path == "/julius_caesar.jpg" else path[len("/static/"):].lstrip("/")
+            candidates = [
+                STATIC_DIR,
+                os.path.join(BASE_DIR, "public", "static"),
+                os.path.join(BASE_DIR, "public"),
+                os.path.join(os.getcwd(), "static"),
+            ]
+            found = False
+            for d in candidates:
+                if os.path.isdir(d):
+                    file_path = os.path.join(d, rel_name)
+                    if os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            content = f.read()
+                        self.send_response(200)
+                        self.send_header("Content-Type", "image/jpeg")
+                        self.send_header("Content-Length", str(len(content)))
+                        self.end_headers()
+                        self.wfile.write(content)
+                        found = True
+                        break
+            if not found:
                 self.send_response(404)
                 self.end_headers()
 
@@ -1527,6 +1838,31 @@ class Stage1Handler(http.server.BaseHTTPRequestHandler):
                 res = {"success": False, "message": f"Malformed request: {str(e)}"}
 
             self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+        elif parsed.path == "/api/validate-flag":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode("utf-8"))
+                user_flag = str(data.get("flag", "")).strip()
+                if user_flag == STAGE5_FLAG:
+                    res = {
+                        "valid": True,
+                        "message": "Flag accepted! Access trail confirmed.",
+                        "stage": 5,
+                        "stage6_info": STAGE6_SSH_INFO
+                    }
+                    status = 200
+                else:
+                    res = {"valid": False, "message": "Invalid flag"}
+                    status = 400
+            except Exception as e:
+                res = {"valid": False, "message": str(e)}
+                status = 400
+
+            self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(res).encode("utf-8"))
