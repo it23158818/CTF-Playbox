@@ -10,16 +10,101 @@ import socketserver
 import json
 import urllib.parse
 import os
+import sqlite3
+import shutil
 from flask import Flask, render_template, request, jsonify, Response
 
 PORT = int(os.environ.get("PORT", 8081))
 STAGE1_FLAG = os.environ.get("STAGE1_FLAG", "CVT{0s1nt_st4g1ng_l34k_8291}")
 STAGE2_URL = os.environ.get("STAGE2_URL", "http://localhost:8082")
+STAGE4_FLAG = os.environ.get("STAGE4_FLAG", "CVT{sql1_byp4ss_v4ult_4dm1n}")
 CORRECT_HOSTNAME = "vault-staging.cybervaulttech.com"
 DECOY_HOSTNAME = "vault-legacy-01"
 
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 app = Flask(__name__, template_folder=template_dir)
+
+# ============================================================================
+# Stage 4 SQL Injection Database Setup (Embedded in Stage 1)
+# ============================================================================
+
+def is_vercel():
+    return bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("NOW_REGION"))
+
+def get_stage1_db_path():
+    if is_vercel():
+        return os.path.join("/tmp", "cybervault_stage1.db")
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "cybervault.db")
+
+def init_stage1_db(target_path=None):
+    path = target_path or get_stage1_db_path()
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+    conn = sqlite3.connect(path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        email TEXT NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS vault_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        asset_id TEXT NOT NULL,
+        asset_type TEXT NOT NULL,
+        custody_status TEXT NOT NULL,
+        encrypted_payload TEXT NOT NULL
+    )
+    """)
+
+    users = [
+        ('admin', 'CV_SuperSecretAdminKey!9283#', 'vault_administrator', 'Root Custodian Admin', 'secops@cybervaulttech.com'),
+        ('operator_dave', 'DaveSecure#Pass2026', 'vault_operator', 'Dave Mitchell', 'dave@cybervaulttech.com'),
+        ('auditor_alice', 'AuditTrack#Secure99', 'compliance_auditor', 'Alice Henderson', 'alice@cybervaulttech.com'),
+        ('svc_backup', 'ShadowBackup#2026!', 'service_account', 'Backup Automation Service', 'svc_backup@cybervaulttech.com')
+    ]
+    cursor.executemany("INSERT INTO users (username, password, role, full_name, email) VALUES (?, ?, ?, ?, ?)", users)
+
+    vault_records = [
+        ('VAULT-BTC-001', 'Bitcoin Cold Storage', 'Secured (Multi-Sig 3/5)', 'enc_0x89f72b143a99e03d...'),
+        ('VAULT-ETH-004', 'Ethereum Master Custody', 'Secured (HSM Module)', 'enc_0x4e21a88b5601c90f...'),
+        ('VAULT-SOL-009', 'Solana Enterprise Reserve', 'Secured (Multi-Sig 2/3)', 'enc_0x117a09c4d8e77a12...')
+    ]
+    cursor.executemany("INSERT INTO vault_records (asset_id, asset_type, custody_status, encrypted_payload) VALUES (?, ?, ?, ?)", vault_records)
+
+    conn.commit()
+    conn.close()
+
+def ensure_stage1_db_ready():
+    target_path = get_stage1_db_path()
+    if not os.path.exists(target_path):
+        sibling_db = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "stage4_client_portal", "cybervault.db")
+        if os.path.exists(sibling_db):
+            try:
+                shutil.copy2(sibling_db, target_path)
+                return
+            except Exception:
+                pass
+        init_stage1_db(target_path)
+
+def get_stage1_db_connection():
+    ensure_stage1_db_ready()
+    conn = sqlite3.connect(get_stage1_db_path())
+    conn.row_factory = sqlite3.Row
+    return conn
+
+ensure_stage1_db_ready()
 
 CAREERS_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -98,6 +183,25 @@ CAREERS_HTML = """<!DOCTYPE html>
         }
         nav a:hover, nav a.active {
             color: var(--accent-cyan);
+        }
+        nav .btn-login {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff !important;
+            padding: 0.45rem 1.15rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        nav .btn-login:hover {
+            background: linear-gradient(135deg, #0369a1, #1d4ed8);
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
+            transform: translateY(-1px);
+            color: #ffffff !important;
         }
         .hero {
             max-width: 1200px;
@@ -254,7 +358,7 @@ CAREERS_HTML = """<!DOCTYPE html>
             <nav>
                 <a href="/" class="active">Careers</a>
                 <a href="/social">Public Feed</a>
-                <a href="/robots.txt" target="_blank">robots.txt</a>
+                <a href="/login" class="btn-login">Login</a>
             </nav>
         </div>
     </header>
@@ -406,6 +510,25 @@ SOCIAL_HTML = """<!DOCTYPE html>
             font-weight: 500;
         }
         nav a:hover, nav a.active { color: var(--accent-cyan); }
+        nav .btn-login {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff !important;
+            padding: 0.45rem 1.15rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        nav .btn-login:hover {
+            background: linear-gradient(135deg, #0369a1, #1d4ed8);
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
+            transform: translateY(-1px);
+            color: #ffffff !important;
+        }
         .feed-container {
             max-width: 720px;
             margin: 3rem auto;
@@ -544,7 +667,7 @@ SOCIAL_HTML = """<!DOCTYPE html>
             <nav>
                 <a href="/">Careers</a>
                 <a href="/social" class="active">Public Feed</a>
-                <a href="/robots.txt" target="_blank">robots.txt</a>
+                <a href="/login" class="btn-login">Login</a>
             </nav>
         </div>
     </header>
@@ -625,6 +748,421 @@ SOCIAL_HTML = """<!DOCTYPE html>
 </html>
 """
 
+LOGIN_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberVault | Enterprise Custody Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --card-bg: #111827;
+            --card-border: #1f293d;
+            --accent-cyan: #00f2fe;
+            --accent-teal: #4facfe;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --glow: 0 0 20px rgba(0, 242, 254, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(79, 172, 254, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.08) 0%, transparent 40%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 9999px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--glow);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            font-family: 'Fira Code', monospace;
+            word-break: break-all;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            background: #0d131f;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-cyan) 100%);
+            color: #050c18;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.45);
+        }
+
+        .portal-link-box {
+            margin-top: 20px;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        .portal-link-box a {
+            color: var(--accent-teal);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .portal-link-box a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+
+        /* Success Flag Popup Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 8, 16, 0.88);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-box {
+            background: #111827;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 14px;
+            padding: 32px 28px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.35), 0 20px 50px rgba(0, 0, 0, 0.85);
+            animation: slideUp 0.25s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
+        }
+        .modal-title {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .flag-container {
+            background: #090e17;
+            border: 1px dashed var(--accent-cyan);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .flag-label {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--accent-teal);
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .flag-value {
+            color: #00f2fe;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.18rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            user-select: all;
+            word-break: break-all;
+            text-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+        }
+        .user-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+            font-family: 'Fira Code', monospace;
+        }
+        .user-meta strong {
+            color: #fff;
+        }
+        .btn-modal-ok {
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-cyan) 100%);
+            color: #050c18;
+            border: none;
+            padding: 12px 42px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0, 242, 254, 0.35);
+            transition: all 0.15s ease;
+        }
+        .btn-modal-ok:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 242, 254, 0.55);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="badge">Stage 4 // Web Application Security</span>
+            <h1 class="title">CyberVault Technologies</h1>
+            <p class="subtitle">Secure Digital Asset Custody Portal</p>
+        </div>
+
+        <div class="card">
+            <div class="alert-error" id="errorMsg" style="{% if not error %}display:none;{% endif %}">
+                [!] Authentication Failed: <span id="errorText">{{ error or '' }}</span>
+            </div>
+
+            <form action="/login" method="POST" id="loginForm">
+                <div class="form-group">
+                    <label for="username">OPERATOR USERNAME</label>
+                    <input type="text" id="username" name="username" placeholder="user name" required autofocus autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">AUTHENTICATION PASSCODE</label>
+                    <input type="password" id="password" name="password" placeholder="password" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="loginBtn">Authenticate to Vault</button>
+            </form>
+
+            <div class="portal-link-box">
+                <a href="/">&larr; Return to Careers Page</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            CyberVault Security Node 10.0.4.15 &bull; Authorized Penetration Testing Environment
+        </div>
+    </div>
+
+    <!-- Success Flag Popup Modal with OK Button -->
+    <div id="flagModal" class="modal-overlay" style="{% if not flag %}display: none;{% endif %}">
+        <div class="modal-box">
+            <div class="modal-badge">&#10004; SQL INJECTION BYPASS SUCCESSFUL</div>
+            <h2 class="modal-title">Authentication Compromised!</h2>
+            <p class="modal-desc">
+                You successfully bypassed authentication using SQL injection! Here is your security challenge flag:
+            </p>
+
+            <div class="flag-container">
+                <span class="flag-label">CAPTURE THE FLAG</span>
+                <div class="flag-value" id="flagText">{{ flag or 'CVT{sql1_byp4ss_v4ult_4dm1n}' }}</div>
+            </div>
+
+            <div class="user-meta" id="userMeta" style="{% if not user %}display:none;{% endif %}">
+                Authenticated Identity: <strong id="userIdentity">{{ user.username if user else 'admin' }}</strong>
+                (<span id="userRole">{{ user.role if user else 'vault_administrator' }}</span>)
+            </div>
+
+            <button type="button" class="btn-modal-ok" id="btnModalOk" onclick="closeFlagModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function closeFlagModal() {
+            const modal = document.getElementById('flagModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
+            const loginBtn = document.getElementById('loginBtn');
+
+            loginBtn.disabled = true;
+            loginBtn.innerText = 'Authenticating...';
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            fetch('/login', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Authenticate to Vault';
+
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    document.getElementById('flagText').innerText = data.flag;
+                    if (data.user) {
+                        document.getElementById('userMeta').style.display = 'block';
+                        document.getElementById('userIdentity').innerText = data.user;
+                        document.getElementById('userRole').innerText = data.role || 'vault_administrator';
+                    }
+                    document.getElementById('flagModal').style.display = 'flex';
+                } else {
+                    errorText.innerText = data.error || 'Invalid credentials.';
+                    errorMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Authenticate to Vault';
+                errorText.innerText = 'Network error during authentication attempt.';
+                errorMsg.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
+"""
+
 ROBOTS_TXT = """User-agent: *
 Disallow: /internal/
 Disallow: /staging-enclave/
@@ -652,6 +1190,10 @@ def careers():
             return social()
         elif clean_path in ("/robots.txt",):
             return robots()
+        elif clean_path in ("/login",):
+            return login()
+        elif clean_path in ("/api/login",):
+            return api_login()
         elif clean_path in ("/api/status",):
             return api_status()
         elif clean_path in ("/api/verify",):
@@ -679,6 +1221,109 @@ def social():
     resp = Response(content, mimetype="text/html; charset=utf-8")
     resp.headers["X-Challenge-Stage"] = "1-OSINT-Recon"
     return resp
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    flag = None
+    authenticated_user = None
+
+    if request.method == "POST":
+        if request.is_json:
+            data = request.get_json(silent=True) or {}
+            username = str(data.get("username", "")).strip()
+            password = str(data.get("password", "")).strip()
+        else:
+            username = str(request.form.get("username", "")).strip()
+            password = str(request.form.get("password", "")).strip()
+
+        if not username:
+            error = "Username is required."
+            if request.is_json or request.headers.get("Accept") == "application/json":
+                return jsonify({"success": False, "error": error}), 400
+            try:
+                return render_template("login.html", error=error)
+            except Exception:
+                return Response(LOGIN_HTML.replace("{% if not error %}display:none;{% endif %}", "").replace("{{ error or '' }}", error), mimetype="text/html; charset=utf-8")
+
+        conn = get_stage1_db_connection()
+        cursor = conn.cursor()
+
+        # Intentionally vulnerable raw string concatenation SQL query (Stage 4 SQLi)
+        raw_query = f"SELECT id, username, role, full_name, email FROM users WHERE username = '{username}' AND password = '{password}'"
+        print(f"[STAGE 1 - SQLi PORTAL AUDIT] Executing SQL Query: {raw_query}")
+
+        try:
+            cursor.execute(raw_query)
+            user = cursor.fetchone()
+
+            if user:
+                authenticated_user = dict(user)
+                flag = STAGE4_FLAG
+                if request.is_json or request.headers.get("Accept") == "application/json":
+                    return jsonify({
+                        "success": True,
+                        "message": "Authentication successful via SQL injection bypass!",
+                        "user": user["username"],
+                        "role": user["role"],
+                        "flag": STAGE4_FLAG
+                    }), 200
+            else:
+                error = "Invalid username or password. Access denied."
+                if request.is_json or request.headers.get("Accept") == "application/json":
+                    return jsonify({"success": False, "error": error}), 401
+        except sqlite3.OperationalError as e:
+            # SQL syntax error leaked, typical in vulnerable pentesting targets
+            error = f"SQL Database Syntax Error: {str(e)}"
+            if request.is_json or request.headers.get("Accept") == "application/json":
+                return jsonify({"success": False, "error": error}), 400
+        finally:
+            conn.close()
+
+    try:
+        content = render_template("login.html", error=error, flag=flag, user=authenticated_user)
+    except Exception:
+        content = LOGIN_HTML
+        if error:
+            content = content.replace("{% if not error %}display:none;{% endif %}", "").replace("{{ error or '' }}", error)
+        if flag:
+            content = content.replace("{% if not flag %}display: none;{% endif %}", "display: flex;").replace("{{ flag or 'CVT{sql1_byp4ss_v4ult_4dm1n}' }}", flag)
+        if authenticated_user:
+            content = content.replace("{% if not user %}display:none;{% endif %}", "display: block;").replace("{{ user.username if user else 'admin' }}", authenticated_user.get("username", "admin")).replace("{{ user.role if user else 'vault_administrator' }}", authenticated_user.get("role", "vault_administrator"))
+    resp = Response(content, mimetype="text/html; charset=utf-8")
+    resp.headers["X-Challenge-Stage"] = "1-OSINT-Recon-SQLi"
+    return resp
+
+
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    data = request.get_json(silent=True) or request.form
+    username = str(data.get("username", "")).strip()
+    password = str(data.get("password", "")).strip()
+
+    conn = get_stage1_db_connection()
+    cursor = conn.cursor()
+    raw_query = f"SELECT id, username, role, full_name, email FROM users WHERE username = '{username}' AND password = '{password}'"
+    print(f"[STAGE 1 - SQLi API AUDIT] Executing SQL Query: {raw_query}")
+
+    try:
+        cursor.execute(raw_query)
+        user = cursor.fetchone()
+        if user:
+            return jsonify({
+                "success": True,
+                "message": "Authentication successful via SQL injection bypass!",
+                "user": user["username"],
+                "role": user["role"],
+                "flag": STAGE4_FLAG
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Invalid credentials"}), 401
+    except sqlite3.OperationalError as e:
+        return jsonify({"success": False, "error": f"SQL Error: {str(e)}"}), 400
+    finally:
+        conn.close()
 
 @app.route("/robots.txt")
 def robots():
@@ -747,6 +1392,13 @@ class Stage1Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("X-Challenge-Stage", "1-OSINT-Recon")
             self.end_headers()
             self.wfile.write(SOCIAL_HTML.encode("utf-8"))
+
+        elif path == "/login":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("X-Challenge-Stage", "1-OSINT-Recon")
+            self.end_headers()
+            self.wfile.write(LOGIN_HTML.encode("utf-8"))
 
         elif path == "/robots.txt":
             self.send_response(200)

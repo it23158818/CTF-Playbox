@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberVault | Enterprise Custody Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --card-bg: #111827;
+            --card-border: #1f293d;
+            --accent-cyan: #00f2fe;
+            --accent-teal: #4facfe;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --glow: 0 0 20px rgba(0, 242, 254, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(79, 172, 254, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(0, 242, 254, 0.08) 0%, transparent 40%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 9999px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--glow);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            font-family: 'Fira Code', monospace;
+            word-break: break-all;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            background: #0d131f;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-cyan) 100%);
+            color: #050c18;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.45);
+        }
+
+        .portal-link-box {
+            margin-top: 20px;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        .portal-link-box a {
+            color: var(--accent-teal);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .portal-link-box a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+
+        /* Success Flag Popup Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 8, 16, 0.88);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-box {
+            background: #111827;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 14px;
+            padding: 32px 28px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.35), 0 20px 50px rgba(0, 0, 0, 0.85);
+            animation: slideUp 0.25s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
+        }
+        .modal-title {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .flag-container {
+            background: #090e17;
+            border: 1px dashed var(--accent-cyan);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .flag-label {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--accent-teal);
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .flag-value {
+            color: #00f2fe;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.18rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            user-select: all;
+            word-break: break-all;
+            text-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+        }
+        .user-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+            font-family: 'Fira Code', monospace;
+        }
+        .user-meta strong {
+            color: #fff;
+        }
+        .btn-modal-ok {
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-cyan) 100%);
+            color: #050c18;
+            border: none;
+            padding: 12px 42px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0, 242, 254, 0.35);
+            transition: all 0.15s ease;
+        }
+        .btn-modal-ok:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 242, 254, 0.55);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="badge">Stage 4 // Web Application Security</span>
+            <h1 class="title">CyberVault Technologies</h1>
+            <p class="subtitle">Secure Digital Asset Custody Portal</p>
+        </div>
+
+        <div class="card">
+            <div class="alert-error" id="errorMsg" style="{% if not error %}display:none;{% endif %}">
+                [!] Authentication Failed: <span id="errorText">{{ error or '' }}</span>
+            </div>
+
+            <form action="/login" method="POST" id="loginForm">
+                <div class="form-group">
+                    <label for="username">OPERATOR USERNAME</label>
+                    <input type="text" id="username" name="username" placeholder="user name" required autofocus autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">AUTHENTICATION PASSCODE</label>
+                    <input type="password" id="password" name="password" placeholder="password" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="loginBtn">Authenticate to Vault</button>
+            </form>
+
+            <div class="portal-link-box">
+                <a href="/">&larr; Return to Careers Page</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            CyberVault Security Node 10.0.4.15 &bull; Authorized Penetration Testing Environment
+        </div>
+    </div>
+
+    <!-- Success Flag Popup Modal with OK Button -->
+    <div id="flagModal" class="modal-overlay" style="{% if not flag %}display: none;{% endif %}">
+        <div class="modal-box">
+            <div class="modal-badge">&#10004; SQL INJECTION BYPASS SUCCESSFUL</div>
+            <h2 class="modal-title">Authentication Compromised!</h2>
+            <p class="modal-desc">
+                You successfully bypassed authentication using SQL injection! Here is your security challenge flag:
+            </p>
+
+            <div class="flag-container">
+                <span class="flag-label">CAPTURE THE FLAG</span>
+                <div class="flag-value" id="flagText">{{ flag or 'CVT{sql1_byp4ss_v4ult_4dm1n}' }}</div>
+            </div>
+
+            <div class="user-meta" id="userMeta" style="{% if not user %}display:none;{% endif %}">
+                Authenticated Identity: <strong id="userIdentity">{{ user.username if user else 'admin' }}</strong>
+                (<span id="userRole">{{ user.role if user else 'vault_administrator' }}</span>)
+            </div>
+
+            <button type="button" class="btn-modal-ok" id="btnModalOk" onclick="closeFlagModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function closeFlagModal() {
+            const modal = document.getElementById('flagModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
+            const loginBtn = document.getElementById('loginBtn');
+
+            loginBtn.disabled = true;
+            loginBtn.innerText = 'Authenticating...';
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            fetch('/login', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Authenticate to Vault';
+
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    document.getElementById('flagText').innerText = data.flag;
+                    if (data.user) {
+                        document.getElementById('userMeta').style.display = 'block';
+                        document.getElementById('userIdentity').innerText = data.user;
+                        document.getElementById('userRole').innerText = data.role || 'vault_administrator';
+                    }
+                    document.getElementById('flagModal').style.display = 'flex';
+                } else {
+                    errorText.innerText = data.error || 'Invalid credentials.';
+                    errorMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                loginBtn.disabled = false;
+                loginBtn.innerText = 'Authenticate to Vault';
+                errorText.innerText = 'Network error during authentication attempt.';
+                errorMsg.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

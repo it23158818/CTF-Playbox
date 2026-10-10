@@ -76,6 +76,25 @@
         nav a:hover, nav a.active {
             color: var(--accent-cyan);
         }
+        nav .btn-login {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff !important;
+            padding: 0.45rem 1.15rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        nav .btn-login:hover {
+            background: linear-gradient(135deg, #0369a1, #1d4ed8);
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
+            transform: translateY(-1px);
+            color: #ffffff !important;
+        }
         .hero {
             max-width: 1200px;
             margin: 3rem auto 2rem;
@@ -231,7 +250,7 @@
             <nav>
                 <a href="/" class="active">Careers</a>
                 <a href="/social">Public Feed</a>
-                <a href="/robots.txt" target="_blank">robots.txt</a>
+                <a href="/login" class="btn-login">Login</a>
             </nav>
         </div>
     </header>
