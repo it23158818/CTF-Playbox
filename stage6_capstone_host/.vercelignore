@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+env/
+Dockerfile
+entrypoint.sh
+setup_vm.sh
+backup-vault.sh
+sudoers_svc_backup
+solve_stage6.py

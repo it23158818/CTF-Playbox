@@ -1,0 +1,3 @@
+# Sudoers configuration for svc_backup
+# Explicit least-privilege bypass vulnerability for Stage 6 Capstone
+svc_backup ALL=(ALL) NOPASSWD: /usr/local/bin/backup-vault.sh
