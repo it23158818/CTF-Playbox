@@ -132,10 +132,10 @@ def favicon():
     return ("", 204)
 
 
-@app.route("/", methods=["GET", "POST"])
-@app.route("/home", methods=["GET", "POST"])
-@app.route("/api/index", methods=["GET", "POST"])
 @app.route("/api/index.py", methods=["GET", "POST"])
+@app.route("/api/index", methods=["GET", "POST"])
+@app.route("/home", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
     # When Vercel rewrites /login, /register, /css/..., etc. to /api/index?path=...
@@ -160,12 +160,23 @@ def home():
             return login()
         elif clean_path in ("/register",):
             return register()
+        elif clean_path in ("/logout", "/signout"):
+            return logout()
         elif clean_path in ("/leaderboard",):
             return leaderboard()
         elif clean_path in ("/challenges",):
             return challenges()
         elif clean_path in (f"/{ADMIN_ROUTE_SECRET}/admin", "/admin_login"):
             return admin_portal()
+        elif clean_path in (f"/{ADMIN_ROUTE_SECRET}/admin/logout", "/admin/logout", "/admin_logout"):
+            return admin_logout()
+        elif clean_path in (f"/{ADMIN_ROUTE_SECRET}/admin/update_stages",):
+            return admin_update_stages()
+        elif clean_path.startswith(f"/{ADMIN_ROUTE_SECRET}/admin/reset_user/"):
+            u = clean_path.split("/")[-1]
+            return admin_reset_user(u)
+        elif clean_path in ("/submit_all",):
+            return submit_all()
         elif clean_path in ("/submit_flag",):
             return submit_flag()
         elif clean_path in ("/unlock_hint",):
@@ -361,12 +372,17 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET", "POST"])
+@app.route("/signout", methods=["GET", "POST"])
 def logout():
     """Clears participant session."""
     session.clear()
+    session.modified = True
     flash("You have been signed out.", "info")
-    return redirect(url_for("home"))
+    resp = redirect(url_for("home"))
+    resp.delete_cookie(app.config.get("SESSION_COOKIE_NAME", "session"), path="/")
+    resp.delete_cookie("session", path="/")
+    return resp
 
 
 # ------------------------------------------------------------------------------
@@ -424,12 +440,16 @@ def admin_portal():
     )
 
 
-@app.route(f"/{ADMIN_ROUTE_SECRET}/admin/logout")
+@app.route(f"/{ADMIN_ROUTE_SECRET}/admin/logout", methods=["GET", "POST"])
+@app.route("/admin/logout", methods=["GET", "POST"])
+@app.route("/admin_logout", methods=["GET", "POST"])
 def admin_logout():
     """Logs out admin user."""
     session.pop("is_admin", None)
+    session.pop("admin_username", None)
+    session.modified = True
     flash("Administrative session terminated.", "info")
-    return redirect(url_for("challenges"))
+    return redirect(url_for("home"))
 
 
 @app.route(f"/{ADMIN_ROUTE_SECRET}/admin/update_stages", methods=["POST"])

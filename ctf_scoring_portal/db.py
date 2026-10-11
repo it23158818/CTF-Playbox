@@ -115,6 +115,7 @@ class DatabaseManager:
                 "stage_name": "Stage 1: Open-Source Intelligence & Perimeter Reconnaissance",
                 "domain": "OSINT & Digital Footprinting",
                 "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "target_label": "https://ctf-playbox-fvpk.vercel.app/",
                 "placeholder": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _",
                 "base_points": 5,
                 "raw_flag": "vault-staging.cybervaulttech.com",
@@ -128,7 +129,8 @@ class DatabaseManager:
                 "stage_id": 2,
                 "stage_name": "Stage 2: Digital Steganography & Metadata Analysis",
                 "domain": "Digital Steganography & Asset Analysis",
-                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "target_url": "",
+                "target_label": "",
                 "placeholder": "CVT{...}",
                 "base_points": 10,
                 "raw_flag": "CVT{m3t4d4t4_3x1f_us3r_c0mm3nt_l34k}",
@@ -142,7 +144,8 @@ class DatabaseManager:
                 "stage_id": 3,
                 "stage_name": "Stage 3: Authentication Portal SQL Injection Bypass",
                 "domain": "Web Application Security (OWASP SQLi)",
-                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "target_url": "",
+                "target_label": "",
                 "placeholder": "CVT{...}",
                 "base_points": 15,
                 "raw_flag": "CVT{sql1_byp4ss_v4ult_4dm1n}",
@@ -156,7 +159,8 @@ class DatabaseManager:
                 "stage_id": 4,
                 "stage_name": "Stage 4: Classical Cryptanalysis & Caesar Cipher",
                 "domain": "Classical Cryptanalysis & Rotational Ciphers",
-                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "target_url": "",
+                "target_label": "",
                 "placeholder": "CVT{...}",
                 "base_points": 20,
                 "raw_flag": "CVT{c43s4r_sh1ft_k3y_r0t4t10n_9173}",
@@ -170,7 +174,8 @@ class DatabaseManager:
                 "stage_id": 5,
                 "stage_name": "Stage 5: Forensic Access Log Analysis & Threat Hunting",
                 "domain": "Digital Forensics & Incident Response",
-                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "target_url": "",
+                "target_label": "",
                 "placeholder": "CVT{...}",
                 "base_points": 24,
                 "raw_flag": "CVT{f0r3ns1c_l0g_tr41l_unv31l3d}",
@@ -185,6 +190,7 @@ class DatabaseManager:
                 "stage_name": "Stage 6: Capstone Host Linux Privilege Escalation",
                 "domain": "Linux System Security & Privilege Escalation",
                 "target_url": "https://ctf-playbox-r7ou.vercel.app/",
+                "target_label": "CyberVault | Capstone Staging Host Console",
                 "placeholder": "CVT{...}",
                 "base_points": 26,
                 "raw_flag": "CVT{r00t_pr1v_3sc_c4pst0n3_mast3r}",
@@ -205,6 +211,7 @@ class DatabaseManager:
                 "stage_name": st["stage_name"],
                 "domain": st["domain"],
                 "target_url": st["target_url"],
+                "target_label": st.get("target_label", ""),
                 "placeholder": st.get("placeholder", "CVT{...}"),
                 "base_points": st["base_points"],
                 "encrypted_flag": enc,
@@ -368,6 +375,16 @@ class DatabaseManager:
             s["hint2_penalty_pct"] = 50
             if "placeholder" not in s or not s["placeholder"]:
                 s["placeholder"] = "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _" if sid == 1 else "CVT{...}"
+            if sid == 1:
+                if not s.get("target_url"):
+                    s["target_url"] = "https://ctf-playbox-fvpk.vercel.app/"
+                if not s.get("target_label"):
+                    s["target_label"] = "https://ctf-playbox-fvpk.vercel.app/"
+            elif sid == 6:
+                if not s.get("target_url"):
+                    s["target_url"] = "https://ctf-playbox-r7ou.vercel.app/"
+                if not s.get("target_label"):
+                    s["target_label"] = "CyberVault | Capstone Staging Host Console"
             if include_decrypted_for_admin:
                 s["decrypted_flag"] = decrypt_flag(s.get("encrypted_flag", ""))
         return stages
@@ -381,6 +398,16 @@ class DatabaseManager:
             stage["hint2_penalty_pct"] = 50
             if "placeholder" not in stage or not stage["placeholder"]:
                 stage["placeholder"] = "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _" if sid == 1 else "CVT{...}"
+            if sid == 1:
+                if not stage.get("target_url"):
+                    stage["target_url"] = "https://ctf-playbox-fvpk.vercel.app/"
+                if not stage.get("target_label"):
+                    stage["target_label"] = "https://ctf-playbox-fvpk.vercel.app/"
+            elif sid == 6:
+                if not stage.get("target_url"):
+                    stage["target_url"] = "https://ctf-playbox-r7ou.vercel.app/"
+                if not stage.get("target_label"):
+                    stage["target_label"] = "CyberVault | Capstone Staging Host Console"
         return stage
 
     def update_stage_config(self, stage_id: int, stage_name: str, domain: str, target_url: str,

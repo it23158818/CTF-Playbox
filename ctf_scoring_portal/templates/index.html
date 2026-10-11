@@ -68,12 +68,22 @@
     </div>
 
     <!-- Target Gateway Link -->
-    {% if stage.target_url %}
+    {% if (stage.stage_id == 1 and stage.target_url) or stage.stage_id == 6 or (stage.target_url and stage.stage_id not in [2, 3, 4, 5]) %}
     <div class="stage-target-container">
         <span class="target-tag">🌐 TARGET ACCESS:</span>
-        <a href="{{ stage.target_url }}" target="_blank" class="target-anchor">
+        {% if stage.stage_id == 6 %}
+        <a href="{{ stage.target_url if stage.target_url else 'https://ctf-playbox-r7ou.vercel.app/' }}" target="_blank" class="target-anchor" title="https://ctf-playbox-r7ou.vercel.app/">
+            CyberVault | Capstone Staging Host Console ↗
+        </a>
+        {% elif stage.target_label %}
+        <a href="{{ stage.target_url }}" target="_blank" class="target-anchor" title="{{ stage.target_url }}">
+            {{ stage.target_label }} ↗
+        </a>
+        {% else %}
+        <a href="{{ stage.target_url }}" target="_blank" class="target-anchor" title="{{ stage.target_url }}">
             {{ stage.target_url }} ↗
         </a>
+        {% endif %}
     </div>
     {% endif %}
 
