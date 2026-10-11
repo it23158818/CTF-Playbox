@@ -41,12 +41,12 @@ except Exception:
     pass
 
 DEFAULT_CRYPTIC_BRIEFS = {
-    1: "The adversary left an open footprint scattered across public horizons. Shadows believe they are invisible in the vast digital commons, yet public trails and open archives never truly forget. Scour the open horizon to uncover what was left in plain view.",
-    2: "An image carries more than meets the eye; what is visible to the gaze masks what lies buried beneath the surface. Deep within the invisible properties and whispered header attributes, an encoded secret rests in silence. Peer behind the canvas into its hidden attributes, unmask the cipher, and recover the truth.",
-    3: "An ancient Roman general shifted his alphabet to veil his battle commands from uninvited eyes. The scrambled phrase seems like meaningless noise, but beneath a simple circular shift of letters, order re-emerges. Shift the wheel of characters back into place to restore the original meaning.",
-    4: "A guarded gateway asks for credentials, trusting every word fed into its query. A cunning manipulator knows that a single punctuation mark can twist logic, blind the validator, and claim supreme administrative authority without a secret passphrase. Whisper the trick that turns doubts into truth.",
-    5: "Footprints in digital dust tell stories that intruders wished were forgotten. A persistent visitor hammered the gates in failure before finding a temporary breach, leaving faint anomalous echoes in the historical ledger. Trace the timeline of the relentless trail to unearth the secret buried in the logs.",
-    6: "You have set foot inside the host machine as a humble guest, but the treasure lies locked in sovereign chambers. A special authority allows elevated execution without restraint. Awaken the dormant script with sovereign power, and the deepest chamber will surrender its ultimate flag."
+    1: "The adversary and employees leave subtle digital footprints across corporate public gateways. Shadows believe casual updates go unnoticed in the digital commons, yet public corporate feeds and job listings reveal operational infrastructure. Scour the organization's public channels to discover the hidden domain.",
+    2: "A picture is worth a thousand words, but its hidden attributes can whisper confidential secrets. An asset depicting an ancient Roman emperor was published on the social stream. Peer behind the visible pixels and into the digital canvas properties to unmask what lies buried beneath.",
+    3: "A secured vault portal guards confidential assets, demanding legitimate credentials. Yet when applications trust user input unconditionally, an adversary can craft punctuation that alters database logic and nullifies the password barrier completely. Force the gateway to accept your presence as the master administrator.",
+    4: "Upon piercing the portal perimeter, an urgent dispatch materialized in a confidential transmission popup. The letters appear shifted out of alignment, guarded by the ancient wheel of rotation. Rotate the alphabet back into alignment to reveal the intercepted intelligence.",
+    5: "Every intruder leaves echoes in the machine's historical audit records. A relentless adversary battered the vault's endpoints in repeated failure before sneaking through an opening. Trace the forensic timeline of anomalous requests to uncover the flag left in the trail.",
+    6: "You have gained access to the remote staging bastion console as a restricted service account. However, sovereign authority remains locked in root custody. Investigate your authorized sudo delegations, invoke the privileged maintenance routine, and claim the final capstone flag."
 }
 
 
@@ -108,112 +108,115 @@ class DatabaseManager:
 
     def _ensure_initial_schema(self):
         """Seeds default stages, encrypted flags, marks, and sample users if not present."""
-        flags_count = self.db.flags.count_documents({})
-        if flags_count == 0:
-            print("[+] [MongoDB] Seeding initial 6 CTF stages with AES-256 encrypted flags...")
-            initial_stages = [
-                {
-                    "stage_id": 1,
-                    "stage_name": "Stage 1: Perimeter Reconnaissance & Port Scanning",
-                    "domain": "Network Security & Reconnaissance",
-                    "target_url": "http://localhost:5000",
-                    "base_points": 5,
-                    "raw_flag": "CVT{n3tw0rk_r3c0n_p0rt_sc4n_d0n3}",
-                    "hint1_text": "Perform an Nmap syn stealth scan against the perimeter gateway to discover hidden open high ports.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "Inspect port 8080 and look at the HTTP header X-Recon-Token.",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Foundational"
-                },
-                {
-                    "stage_id": 2,
-                    "stage_name": "Stage 2: Cryptographic Decryption & Hash Cracking",
-                    "domain": "Applied Cryptography",
-                    "target_url": "http://localhost:5000",
-                    "base_points": 10,
-                    "raw_flag": "CVT{crYpt0_h4sh_br34k_suCc3ss}",
-                    "hint1_text": "Identify the encryption scheme used in the intercepted ciphertext; it appears to be multi-layer base64 and XOR with a 4-byte key.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "The XOR key is 'SHDW' applied to the decoded base64 byte stream.",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Easy - Intermediate"
-                },
-                {
-                    "stage_id": 3,
-                    "stage_name": "Stage 3: Binary Reverse Engineering & Exploitation",
-                    "domain": "Reverse Engineering & Binary Analysis",
-                    "target_url": "http://localhost:5000",
-                    "base_points": 15,
-                    "raw_flag": "CVT{r3v3rs3_3ng_b1n4ry_0v3rfl0w}",
-                    "hint1_text": "Disassemble the authentication binary using Ghidra or objdump to examine the validation subroutine.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "The binary checks for an environment variable named 'SHADOW_AUTH_TOKEN' before comparing the buffer.",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Intermediate"
-                },
-                {
-                    "stage_id": 4,
-                    "stage_name": "Stage 4: Client Portal Authentication Bypass",
-                    "domain": "Web Application Security (OWASP SQLi)",
-                    "target_url": "http://localhost:5004",
-                    "base_points": 20,
-                    "raw_flag": "CVT{sql1_byp4ss_v4ult_4dm1n}",
-                    "hint1_text": "The backend queries user credentials using simple string concatenation. Consider how special SQL characters in the username can manipulate the query logic.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "Use an SQL comment sequence such as ' -- after the target username to comment out the password evaluation entirely!",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Intermediate"
-                },
-                {
-                    "stage_id": 5,
-                    "stage_name": "Stage 5: Forensic Access Log Analysis",
-                    "domain": "Digital Forensics & Incident Response",
-                    "target_url": "http://localhost:5005",
-                    "base_points": 24,
-                    "raw_flag": "CVT{f0r3ns1c_l0g_tr41l_unv31l3d}",
-                    "hint1_text": "Look for a repetitive pattern of authentication failure (HTTP 401) originating from one specific IP address targeting /admin.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "Follow the timeline of that specific source IP. Immediately following the repeated 401 errors, look at the last request that returned 200 OK — it contains a leaked x-debug-flag and SSH credentials!",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Intermediate - Advanced"
-                },
-                {
-                    "stage_id": 6,
-                    "stage_name": "Stage 6: The Backup Capstone Host (Privilege Escalation)",
-                    "domain": "Linux System Security & Privilege Escalation",
-                    "target_url": "http://localhost:5006",
-                    "base_points": 26,
-                    "raw_flag": "CVT{r00t_pr1v_3sc_c4pst0n3_mast3r}",
-                    "hint1_text": "Begin by checking your identity and what elevated permissions your user possesses using whoami and sudo -l.",
-                    "hint1_penalty_pct": 10,
-                    "hint2_text": "Execute sudo /usr/local/bin/backup-vault.sh to trigger the root-level custody backup and display the capstone flag.",
-                    "hint2_penalty_pct": 50,
-                    "difficulty": "Advanced (Capstone)"
-                }
-            ]
+        print("[+] [MongoDB] Synchronizing 6 CTF stages with AES-256 encrypted flags...")
+        initial_stages = [
+            {
+                "stage_id": 1,
+                "stage_name": "Stage 1: Open-Source Intelligence & Perimeter Reconnaissance",
+                "domain": "OSINT & Digital Footprinting",
+                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "placeholder": "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _",
+                "base_points": 5,
+                "raw_flag": "vault-staging.cybervaulttech.com",
+                "hint1_text": "Hiring announcements often whisper what infrastructure teams are secretly building. Cross-reference corporate job requirements with the engineering social broadcasts.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "Look for an employee posting about recent cluster migrations on the public feed. An internal staging domain name was accidentally left in plain sight.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Foundational (OSINT)"
+            },
+            {
+                "stage_id": 2,
+                "stage_name": "Stage 2: Digital Steganography & Metadata Analysis",
+                "domain": "Digital Steganography & Asset Analysis",
+                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "placeholder": "CVT{...}",
+                "base_points": 10,
+                "raw_flag": "CVT{m3t4d4t4_3x1f_us3r_c0mm3nt_l34k}",
+                "hint1_text": "Images speak in pixels to human eyes, but machines read the invisible headers inscribed within their creation records.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "Inspect the EXIF metadata properties of the shared Roman emperor image. The embedded user comment holds an encoded ciphertext waiting to be translated.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Easy (Steganography)"
+            },
+            {
+                "stage_id": 3,
+                "stage_name": "Stage 3: Authentication Portal SQL Injection Bypass",
+                "domain": "Web Application Security (OWASP SQLi)",
+                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "placeholder": "CVT{...}",
+                "base_points": 15,
+                "raw_flag": "CVT{sql1_byp4ss_v4ult_4dm1n}",
+                "hint1_text": "When a gatekeeper blindly concatenates your words into queries, a well-placed punctuation mark can silence the rest of the question.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "The login form is vulnerable to classic SQL injection. Inject an SQL termination and comment syntax into the username field to bypass password authentication as the administrator.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Intermediate (SQLi Bypass)"
+            },
+            {
+                "stage_id": 4,
+                "stage_name": "Stage 4: Classical Cryptanalysis & Caesar Cipher",
+                "domain": "Classical Cryptanalysis & Rotational Ciphers",
+                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "placeholder": "CVT{...}",
+                "base_points": 20,
+                "raw_flag": "CVT{c43s4r_sh1ft_k3y_r0t4t10n_9173}",
+                "hint1_text": "The Roman general's ancient wheel of letters has turned. Rotate the characters of the intercepted alert to restore order to chaos.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "Analyze the encrypted memo displayed in the transmission popup. Apply a Caesar cipher rotation key to unshift the disguised ciphertext letters back to their true positions.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Intermediate (Caesar Cryptanalysis)"
+            },
+            {
+                "stage_id": 5,
+                "stage_name": "Stage 5: Forensic Access Log Analysis & Threat Hunting",
+                "domain": "Digital Forensics & Incident Response",
+                "target_url": "https://ctf-playbox-fvpk.vercel.app/",
+                "placeholder": "CVT{...}",
+                "base_points": 24,
+                "raw_flag": "CVT{f0r3ns1c_l0g_tr41l_unv31l3d}",
+                "hint1_text": "Where many doors were knocked upon in vain, one finally opened. Follow the footprints of the persistent visitor through the historical ledger.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "Filter the server access logs for anomalous IP addresses exhibiting bursts of authentication failures followed by a successful request. The trail reveals leaked forensic artifacts.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Intermediate - Advanced (Log Forensics)"
+            },
+            {
+                "stage_id": 6,
+                "stage_name": "Stage 6: Capstone Host Linux Privilege Escalation",
+                "domain": "Linux System Security & Privilege Escalation",
+                "target_url": "https://ctf-playbox-r7ou.vercel.app/",
+                "placeholder": "CVT{...}",
+                "base_points": 26,
+                "raw_flag": "CVT{r00t_pr1v_3sc_c4pst0n3_mast3r}",
+                "hint1_text": "A humble servant often possesses special delegated privileges granted by the sovereign realm. Query the system to see what powers you are permitted to invoke.",
+                "hint1_penalty_pct": 0,
+                "hint2_text": "In the web terminal, inspect your user's allowed sudo privileges to identify scripts that can be executed with elevated root permissions, then run the authorized maintenance script.",
+                "hint2_penalty_pct": 50,
+                "difficulty": "Advanced (Privilege Escalation Capstone)"
+            }
+        ]
 
-            docs_to_insert = []
-            for st in initial_stages:
-                # Encrypt flag before inserting into MongoDB
-                enc = encrypt_flag(st["raw_flag"])
-                hsh = hash_flag(st["raw_flag"])
-                docs_to_insert.append({
-                    "stage_id": st["stage_id"],
-                    "stage_name": st["stage_name"],
-                    "domain": st["domain"],
-                    "target_url": st["target_url"],
-                    "base_points": st["base_points"],
-                    "encrypted_flag": enc,
-                    "flag_hash": hsh,
-                    "hint1_text": st["hint1_text"],
-                    "hint1_penalty_pct": st["hint1_penalty_pct"],
-                    "hint2_text": st["hint2_text"],
-                    "hint2_penalty_pct": st["hint2_penalty_pct"],
-                    "difficulty": st["difficulty"],
-                    "updated_at": datetime.utcnow().isoformat()
-                })
-
-            self.db.flags.insert_many(docs_to_insert)
+        for st in initial_stages:
+            # Encrypt flag before inserting into MongoDB
+            enc = encrypt_flag(st["raw_flag"])
+            hsh = hash_flag(st["raw_flag"])
+            stage_doc = {
+                "stage_id": st["stage_id"],
+                "stage_name": st["stage_name"],
+                "domain": st["domain"],
+                "target_url": st["target_url"],
+                "placeholder": st.get("placeholder", "CVT{...}"),
+                "base_points": st["base_points"],
+                "encrypted_flag": enc,
+                "flag_hash": hsh,
+                "hint1_text": st["hint1_text"],
+                "hint1_penalty_pct": st["hint1_penalty_pct"],
+                "hint2_text": st["hint2_text"],
+                "hint2_penalty_pct": st["hint2_penalty_pct"],
+                "difficulty": st["difficulty"],
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            self.db.flags.update_one({"stage_id": st["stage_id"]}, {"$set": stage_doc}, upsert=True)
 
         # Ensure administrative user exists in users collection
         if not self.db.users.find_one({"role": "admin"}):
@@ -363,6 +366,8 @@ class DatabaseManager:
             s["cryptic_brief"] = DEFAULT_CRYPTIC_BRIEFS.get(sid, s.get("cryptic_brief", ""))
             s["hint1_penalty_pct"] = 0
             s["hint2_penalty_pct"] = 50
+            if "placeholder" not in s or not s["placeholder"]:
+                s["placeholder"] = "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _" if sid == 1 else "CVT{...}"
             if include_decrypted_for_admin:
                 s["decrypted_flag"] = decrypt_flag(s.get("encrypted_flag", ""))
         return stages
@@ -374,12 +379,15 @@ class DatabaseManager:
             stage["cryptic_brief"] = DEFAULT_CRYPTIC_BRIEFS.get(sid, stage.get("cryptic_brief", ""))
             stage["hint1_penalty_pct"] = 0
             stage["hint2_penalty_pct"] = 50
+            if "placeholder" not in stage or not stage["placeholder"]:
+                stage["placeholder"] = "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _" if sid == 1 else "CVT{...}"
         return stage
 
     def update_stage_config(self, stage_id: int, stage_name: str, domain: str, target_url: str,
                             base_points: int, plaintext_flag: str,
                             hint1_text: str, hint1_penalty_pct: int,
-                            hint2_text: str, hint2_penalty_pct: int):
+                            hint2_text: str, hint2_penalty_pct: int,
+                            placeholder: str = None):
         """Updates stage configuration and encrypts the flag in MongoDB."""
         update_data = {
             "stage_name": stage_name.strip(),
@@ -392,6 +400,8 @@ class DatabaseManager:
             "hint2_penalty_pct": int(hint2_penalty_pct),
             "updated_at": datetime.utcnow().isoformat()
         }
+        if placeholder is not None:
+            update_data["placeholder"] = placeholder.strip()
         if plaintext_flag and plaintext_flag.strip():
             clean_flag = plaintext_flag.strip()
             update_data["encrypted_flag"] = encrypt_flag(clean_flag)
@@ -467,8 +477,18 @@ class DatabaseManager:
         if progress and progress.get("solved"):
             return False, f"Stage {stage_id} already solved! Earned: {progress.get('points_earned')} pts", progress.get('points_earned')
 
-        from crypto_vault import verify_flag
+        from crypto_vault import verify_flag, decrypt_flag
         is_valid = verify_flag(clean_sub, stage.get("encrypted_flag"), stage.get("flag_hash"))
+
+        # Additional validation resilience for Stage 1 domain or accidental CVT{...} wrapper
+        if not is_valid:
+            expected_flag = decrypt_flag(stage.get("encrypted_flag", ""))
+            if clean_sub.lower() == expected_flag.lower():
+                is_valid = True
+            elif clean_sub.startswith("CVT{") and clean_sub.endswith("}"):
+                inner = clean_sub[4:-1].strip()
+                if inner.lower() == expected_flag.lower() or inner == expected_flag:
+                    is_valid = True
 
         # Calculate score and penalties
         base_points = float(stage.get("base_points", 0))
@@ -508,10 +528,12 @@ class DatabaseManager:
                 upsert=True
             )
             self.sync_storage()
-            return True, f"🎉 Flag Accepted! Stage {stage_id} complete. Earned {points_awarded} / {base_points} pts (Penalties: -{penalty_deducted} pts)", points_awarded
+            penalty_msg = f" (Penalties: -{penalty_deducted} pts)" if penalty_deducted > 0 else ""
+            return True, f"🎉 Flag Accepted! Stage {stage_id} complete. Earned {points_awarded} / {base_points} pts{penalty_msg}", points_awarded
         else:
             self.sync_storage()
-            return False, "❌ Incorrect flag. Ensure exact casing and 'CVT{...}' format.", 0.0
+            err_msg = "❌ Incorrect hostname. Ensure exact full domain name (e.g. vault-staging.cybervaulttech.com)." if stage_id == 1 else "❌ Incorrect flag. Ensure exact casing and 'CVT{...}' format."
+            return False, err_msg, 0.0
 
     # ==========================================================================
     # RANKINGS & LEADERBOARD

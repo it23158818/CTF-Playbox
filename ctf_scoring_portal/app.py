@@ -90,12 +90,46 @@ def login_required(view_func):
 # ------------------------------------------------------------------------------
 # PARTICIPANT ROUTES
 # ------------------------------------------------------------------------------
+@app.route("/css/<path:filename>")
+def serve_css(filename):
+    """Serve CSS directly when requested via /css/..."""
+    candidates = [
+        os.path.join(BASE_DIR, "static", "css"),
+        os.path.join(BASE_DIR, "public", "css"),
+        os.path.join(BASE_DIR, "static"),
+        os.path.join(BASE_DIR, "public"),
+    ]
+    for d in candidates:
+        target = os.path.join(d, filename)
+        if os.path.isfile(target):
+            return send_from_directory(d, filename, mimetype="text/css")
+    return abort(404)
+
+
 @app.route("/static/<path:filename>")
 @app.route("/public/<path:filename>")
 def serve_static(filename):
-    """Explicitly serve static assets for serverless environments where static_folder may fail."""
-    static_dir = os.path.join(BASE_DIR, "static")
-    return send_from_directory(static_dir, filename)
+    """Explicitly serve static assets for local and serverless environments."""
+    candidates = [
+        os.path.join(BASE_DIR, "static"),
+        os.path.join(BASE_DIR, "public"),
+    ]
+    for d in candidates:
+        target = os.path.join(d, filename)
+        if os.path.isfile(target):
+            mimetype = "text/css" if filename.lower().endswith(".css") else None
+            return send_from_directory(d, filename, mimetype=mimetype)
+    return abort(404)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    """Return 204 No Content or favicon to prevent 404 console errors."""
+    for d in [os.path.join(BASE_DIR, "static"), os.path.join(BASE_DIR, "public")]:
+        target = os.path.join(d, "favicon.ico")
+        if os.path.isfile(target):
+            return send_from_directory(d, "favicon.ico", mimetype="image/vnd.microsoft.icon")
+    return ("", 204)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -104,22 +138,38 @@ def serve_static(filename):
 @app.route("/api/index.py", methods=["GET", "POST"])
 def home():
     """Event Home Page showing about the event, mission storyline, rules, and CTAs."""
-    # When Vercel rewrites /login, /register, etc. to /api/index?path=...
+    # When Vercel rewrites /login, /register, /css/..., etc. to /api/index?path=...
     target_path = request.args.get("path", "").strip()
-    if target_path in ("/login", "login"):
-        return login()
-    elif target_path in ("/register", "register"):
-        return register()
-    elif target_path in ("/leaderboard", "leaderboard"):
-        return leaderboard()
-    elif target_path in ("/challenges", "challenges"):
-        return challenges()
-    elif target_path in (f"/{ADMIN_ROUTE_SECRET}/admin", f"{ADMIN_ROUTE_SECRET}/admin", "/admin_login", "admin_login"):
-        return admin_portal()
-    elif target_path in ("/submit_flag", "submit_flag"):
-        return submit_flag()
-    elif target_path in ("/unlock_hint", "unlock_hint"):
-        return unlock_hint()
+    if target_path:
+        clean_path = target_path.rstrip("/") if target_path != "/" else "/"
+        if not clean_path.startswith("/"):
+            clean_path = "/" + clean_path
+
+        if clean_path in ("/favicon.ico",):
+            return favicon()
+        elif clean_path.startswith("/css/"):
+            filename = clean_path[len("/css/"):].lstrip("/")
+            return serve_css(filename)
+        elif clean_path.startswith("/static/"):
+            filename = clean_path[len("/static/"):].lstrip("/")
+            return serve_static(filename)
+        elif clean_path.startswith("/public/"):
+            filename = clean_path[len("/public/"):].lstrip("/")
+            return serve_static(filename)
+        elif clean_path in ("/login",):
+            return login()
+        elif clean_path in ("/register",):
+            return register()
+        elif clean_path in ("/leaderboard",):
+            return leaderboard()
+        elif clean_path in ("/challenges",):
+            return challenges()
+        elif clean_path in (f"/{ADMIN_ROUTE_SECRET}/admin", "/admin_login"):
+            return admin_portal()
+        elif clean_path in ("/submit_flag",):
+            return submit_flag()
+        elif clean_path in ("/unlock_hint",):
+            return unlock_hint()
 
     return render_template("home.html")
 

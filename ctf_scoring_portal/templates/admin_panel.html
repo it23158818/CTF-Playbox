@@ -247,7 +247,7 @@
                         </td>
                         <td>
                             <input type="text" class="admin-input" name="flag_{{ s.stage_id }}"
-                                placeholder="CVT{new_flag_here}"
+                                placeholder="{{ s.placeholder if s.placeholder else ('vault-staging.cybervaulttech.com' if s.stage_id == 1 else 'CVT{new_flag_here}') }}"
                                 style="min-width: 220px; font-family: 'Fira Code', monospace;"
                                 autocomplete="off">
                             {% if s.decrypted_flag %}

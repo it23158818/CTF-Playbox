@@ -67,8 +67,8 @@
         </p>
     </div>
 
-    <!-- Target Gateway Link (ONLY DISPLAYED IN STAGE 1) -->
-    {% if stage.stage_id == 1 %}
+    <!-- Target Gateway Link -->
+    {% if stage.target_url %}
     <div class="stage-target-container">
         <span class="target-tag">🌐 TARGET ACCESS:</span>
         <a href="{{ stage.target_url }}" target="_blank" class="target-anchor">
@@ -133,7 +133,7 @@
             <input type="text" 
                    class="flag-input-wide" 
                    id="flag-{{ stage.stage_id }}" 
-                   placeholder="CVT{...}" 
+                   placeholder="{{ stage.placeholder if stage.placeholder else ('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _' if stage.stage_id == 1 else 'CVT{...}') }}" 
                    autocomplete="off" 
                    spellcheck="false"
                    onkeydown="if(event.key==='Enter') submitFlag({{ stage.stage_id }})">
@@ -245,7 +245,7 @@ async function submitFlag(stageId) {
     if (!flagVal) {
         banner.className = 'stage-status-banner error';
         banner.style.display = 'block';
-        banner.textContent = '⚠ Please enter a flag in CVT{...} format.';
+        banner.textContent = (stageId === 1) ? '⚠ Please enter the discovered domain hostname.' : '⚠ Please enter a flag in CVT{...} format.';
         return;
     }
     
